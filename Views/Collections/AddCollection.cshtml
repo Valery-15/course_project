@@ -1,0 +1,42 @@
+﻿@model CollectionsApp.ViewModels.CollectionViewModel
+
+<div class="form-group">
+    <h1 class="h2 text-primary">Create collection</h1>
+
+    <form method="post" asp-controller="Collections" asp-action="AddCollection">
+        <div asp-validation-summary="All"></div>
+
+        <div>
+            <label asp-for="Title"></label><br />
+            <br /><input asp-for="Title" />
+            <span asp-validation-for="Title"></span>
+            <br />
+        </div>
+
+        <div>
+            <label asp-for="Theme"></label><br />
+            <select asp-for="Theme">
+                <option selected value="books">books</option>
+                <option value="plants">plants</option>
+                <option value="toys">toys</option>
+            </select>
+        </div>
+
+        <div>
+            <label asp-for="Description"></label><br />
+            <br /><input asp-for="Description" />
+            <span asp-validation-for="Description"></span>
+            <br />
+        </div>
+
+        <div>
+            <br /><input type="submit" class="btn btn-primary" value="Log In" /><br />
+        </div>
+    </form>
+
+    <br /><a asp-controller="Account" asp-action="Register">New user? Register</a>
+</div>
+
+<form action="/Collections/AddCollection" method="post">
+    
+</form>

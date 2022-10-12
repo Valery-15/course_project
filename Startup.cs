@@ -8,8 +8,11 @@ using Microsoft.AspNetCore.HttpsPolicy;
 using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
+using CollectionsApp.Models;
+using Microsoft.AspNetCore.Identity;
+using Microsoft.EntityFrameworkCore;
 
-namespace CoollectionsApp
+namespace CollectionsApp
 {
     public class Startup
     {
@@ -24,6 +27,21 @@ namespace CoollectionsApp
         public void ConfigureServices(IServiceCollection services)
         {
             services.AddControllersWithViews();
+
+            services.AddDbContext<ApplicationContext>(options =>
+                options.UseSqlServer(Configuration.GetConnectionString("DefaultConnection")));
+
+            services.AddIdentity<User, IdentityRole>(options =>
+            {
+                options.Password.RequiredLength = 1;   // минимальная длина
+                options.Password.RequireNonAlphanumeric = false;   // требуются ли не алфавитно-цифровые символы
+                options.Password.RequireLowercase = false; // требуются ли символы в нижнем регистре
+                options.Password.RequireUppercase = false; // требуются ли символы в верхнем регистре
+                options.Password.RequireDigit = false;
+                options.User.RequireUniqueEmail = true;
+            }).AddEntityFrameworkStores<ApplicationContext>();
+
+           
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.
@@ -44,6 +62,7 @@ namespace CoollectionsApp
 
             app.UseRouting();
 
+            app.UseAuthentication();
             app.UseAuthorization();
 
             app.UseEndpoints(endpoints =>

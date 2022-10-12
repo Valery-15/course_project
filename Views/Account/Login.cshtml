@@ -1,0 +1,26 @@
+﻿@model CollectionsApp.ViewModels.LoginViewModel
+
+<div class="form-group">
+    <h1 class="h1 text-primary">Authentication</h1>
+
+    <form method="post" asp-controller="Account" asp-action="Login">
+        <div asp-validation-summary="All"></div>
+
+        <div>
+            <label asp-for="Email"></label>
+            <br /><input asp-for="Email" placeholder="e-mail" />
+            <span asp-validation-for="Email"></span>
+            <br />
+        </div>
+        <div>
+            <br /><label asp-for="Password"></label>
+            <br /><input asp-for="Password" placeholder="password" />
+            <span asp-validation-for="Password"></span>
+        </div>
+        <div>
+            <br /><input type="submit" class="btn btn-primary" value="Log In" /><br />
+        </div>
+    </form>
+
+    <br /><a asp-controller="Account" asp-action="Register">New user? Register</a>
+</div>

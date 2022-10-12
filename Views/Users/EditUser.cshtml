@@ -1,0 +1,33 @@
+﻿@model CollectionsApp.ViewModels.EditUserViewModel
+
+<h1>Edit user</h1>
+<form method="post" asp-controller="Users" asp-action="EditUser">
+    <div asp-validation-summary="All"></div>
+    <input type="hidden" name="userId" value="@ViewBag.UserId">
+    <div>
+        <label asp-for="Email"></label><br />
+        <input asp-for="Email" />
+        @*<span asp-validation-for="Email"></span>*@
+    </div>
+    <div>
+        <label asp-for="UserName"></label><br />
+        <input asp-for="UserName" /><br />
+        @*<span asp-validation-for="UserName"></span><br />*@
+    </div>
+    <div>
+        <input type="checkbox" asp-for="IsAdmin" value="true"/>
+        <label asp-for="IsAdmin"></label><br />
+        @*<span asp-validation-for="UserName"></span><br />*@
+    </div>
+    <div>
+        <label asp-for="Status"></label><br />
+        <select asp-for="Status">
+            <option value="active">active</option>
+            <option value="blocked">blocked</option>
+        </select><br />
+        @*<span asp-validation-for="Email"></span>*@
+    </div>
+    <div>
+        <input type="submit" value="Save changes" />
+    </div>
+</form>

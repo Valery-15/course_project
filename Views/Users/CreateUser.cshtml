@@ -1,0 +1,29 @@
+﻿@model CollectionsApp.ViewModels.RegisterViewModel
+
+<h1>Create new user</h1>
+<form method="post" asp-controller="Users" asp-action="CreateUser">
+    <div asp-validation-summary="All"></div>
+    <div>
+        <label asp-for="Email"></label><br />
+        <input asp-for="Email" />
+        @*<span asp-validation-for="Email"></span>*@
+    </div>
+    <div>
+        <label asp-for="UserName"></label><br />
+        <input asp-for="UserName" />
+        @*<span asp-validation-for="UserName"></span><br />*@
+    </div>
+    <div>
+        <label asp-for="Password"></label><br />
+        <input asp-for="Password" />
+        @*<span asp-validation-for="Password"></span>*@
+    </div>
+    <div>
+        <label asp-for="PasswordConfirm"></label><br />
+        <input asp-for="PasswordConfirm" />
+        @*<span asp-validation-for="PasswordConfirm"></span>*@
+    </div>
+    <div>
+        <input type="submit" value="Create" />
+    </div>
+</form>
