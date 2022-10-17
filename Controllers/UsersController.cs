@@ -14,6 +14,7 @@ using CollectionsApp.ViewModels;
 namespace CoollectionsApp.Controllers
 {
     [Authorize(Roles = "admin")]
+    [Authorize(Roles = "active user")]
     public class UsersController : Controller
     {
         private readonly UserManager<User> _userManager;
@@ -42,8 +43,6 @@ namespace CoollectionsApp.Controllers
         {
             return View();
         }
-
-
 
         [HttpGet]
         public IActionResult CreateUser()
@@ -78,7 +77,7 @@ namespace CoollectionsApp.Controllers
             User user = await _userManager.FindByIdAsync(userId);
             if (user != null)
             {
-                EditUserViewModel userEditViewModel = new EditUserViewModel { Email = user.Email, UserName = user.UserName, Status = user.Status };
+                EditUserViewModel userEditViewModel = new EditUserViewModel { Email = user.Email, UserName = user.UserName, Status = user.Status, IsAdmin = await _userManager.IsInRoleAsync(user, "admin")};
                 ViewBag.UserId = userId;
                 return View(userEditViewModel);
             } 
@@ -97,7 +96,22 @@ namespace CoollectionsApp.Controllers
                 userToEdit.Email = model.Email;
                 userToEdit.UserName = model.UserName;
                 userToEdit.Status = model.Status;
+                if (userToEdit.Status.Equals("active"))
+                {
+                    await _userManager.AddToRoleAsync(userToEdit, "active user");
+                }
+                else
+                {
+                    await _userManager.RemoveFromRoleAsync(userToEdit, "active user");
+                }
                 var result = await _userManager.UpdateAsync(userToEdit);
+                if (model.IsAdmin)
+                {
+                    await _userManager.AddToRoleAsync(userToEdit, "admin");
+                } else
+                {
+                    await _userManager.RemoveFromRoleAsync(userToEdit, "admin");
+                }
             }
             
             return RedirectToAction("Index","Users");
@@ -118,9 +132,17 @@ namespace CoollectionsApp.Controllers
         public async Task<IActionResult> ChangeUserStatus(string userId, string currentStatus)
         {
             string changedStatus = currentStatus.Equals("active") ? "blocked" : "active";
+
             User user = await _userManager.FindByIdAsync(userId);
             if (user != null)
             {
+                if (changedStatus.Equals("active"))
+                {
+                    await _userManager.AddToRoleAsync(user, "active user");
+                } else
+                {
+                    await _userManager.RemoveFromRoleAsync(user, "active user");
+                }
                 user.Status = changedStatus;
                 var result = await _userManager.UpdateAsync(user);
             }
@@ -136,7 +158,7 @@ namespace CoollectionsApp.Controllers
             var usersList = new List<UsersTableViewModel>();
             foreach(var user in usersTableList)
             {
-                usersList.Add(new UsersTableViewModel { Email = user.Email, UserName = user.UserName, IsAdmin = await _userManager.IsInRoleAsync(user, "admin"), Status = user.Status });
+                usersList.Add(new UsersTableViewModel { Id = user.Id, Email = user.Email, UserName = user.UserName, IsAdmin = await _userManager.IsInRoleAsync(user, "admin"), Status = user.Status });
             }
             return Json(usersList);
         }

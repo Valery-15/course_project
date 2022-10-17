@@ -1,0 +1,49 @@
+﻿@model CollectionsApp.ViewModels.CreateItemViewModel
+
+<div class="form-group">
+    <h1 class="h1 text-primary">Create item</h1>
+
+    <form method="post" asp-controller="Items" asp-action="CreateItem" asp-route-collectionId="@ViewBag.collectionId">
+        <div asp-validation-summary="All"></div>
+
+        <div>
+            <label asp-for="Title"></label><br />
+            <input asp-for="Title" />
+            <br />
+        </div>
+
+        <div>
+            <label asp-for="Tags"></label><br />
+            <textarea asp-for="Tags"></textarea>
+            <br />
+        </div>
+
+        @foreach (var field in Model.Fields)
+        {
+            <div>
+                @if (!field.Type.Equals("checkbox")) { 
+                    <label for="@field.Title">@field.Title</label><br />
+                }
+                
+                @if (field.Type.Equals("textarea"))
+                {
+                    <textarea name="@field.Title" id="@field.Title"></textarea>
+                }
+                else
+                {
+                    <input type="@field.Type" name="@field.Title" id="@field.Title" />
+                }
+
+                @if (field.Type.Equals("checkbox")) { 
+                    <label for="@field.Title">@field.Title</label>
+                }
+                <br /><br />
+            </div>
+         }
+
+
+                <div>
+                    <br /><input type="submit" class="btn btn-primary" value="Create" /><br />
+                </div>
+            </form>
+</div>

@@ -6,7 +6,7 @@ using System.ComponentModel.DataAnnotations;
 
 namespace CollectionsApp.ViewModels
 {
-    public class CollectionViewModel
+    public class EditCollectionViewModel
     {
         [Required]
         [Display(Name = "Title")]

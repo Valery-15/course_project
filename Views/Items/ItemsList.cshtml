@@ -2,27 +2,18 @@
 <div>
     <nav class="navbar navbar-light bg-success bg-light">
         <form class="form-inline">
-            @if (ViewBag.currentUserId.Equals(ViewBag.collectionsOwnerId))
-            {
-                <h1>My Collections</h1>
-            }
-            else
-            {
-                <h1>Collections</h1>
-            }
+            <h1>Items</h1>
         </form>
         <form class="form-inline">
-            <a asp-controller="Collections" asp-action="CreateCollection" asp-route-collectionsOwnerId="@ViewBag.collectionsOwnerId" class="btn btn-outline-success"><i class="bi bi-plus-circle"></i></a>
+            <a asp-controller="Items" asp-action="CreateItem" asp-route-collectionId="@ViewBag.collectionId" class="btn btn-outline-success"><i class="bi bi-plus-circle"></i></a>
         </form>
     </nav>
 
-    <table class="table table-striped table-bordered" id="collectionsTable">
+    <table class="table table-striped table-bordered" id="itemsTable">
         <thead class="thead-dark">
             <tr>
                 <th>Title</th>
-                <th>Theme</th>
-                <th>Description</th>
-                <th>Size</th>
+                <th>Tags</th>
                 <th></th>
             </tr>
         </thead>
@@ -32,23 +23,21 @@
 </div>
 
 <script>
-    var collectionsOwnerId = '@ViewBag.collectionsOwnerId';
-    
-    console.log(collectionsOwnerId);
+    var collectionId = '@ViewBag.collectionId';
 
-    var collectionsTable = document.getElementById('collectionsTable');
+    var itemsTable = document.getElementById('itemsTable');
 
-    updateCollectionsList();
+    updateItemsList();
 
-    function updateCollectionsList() {
-        var url = '/Collections/GetCollectionsList?userId=' + collectionsOwnerId;
+    function updateItemsList() {
+        var url = '/Items/GetItemsList?collectionId=' + collectionId;
         fetch(url)
             .then(res => res.json())
             .then(data => {
                 console.log('data: ', data)
-                clearTable(collectionsTable, 1);
+                clearTable(itemsTable, 1);
 
-                data.forEach((collection) => {
+                data.forEach((item) => {
                     var tr = document.createElement('tr');
                     var td;
 
@@ -60,23 +49,11 @@
                     //tr.appendChild(td);
 
                     td = document.createElement('td');
-                    var a = document.createElement('a');
-                    var linkText = document.createTextNode(collection.title);
-                    a.appendChild(linkText);
-                    a.href = "/Items/ItemsList?collectionId=" + collection.id;
-                    td.appendChild(a);
+                    td.innerHTML = item.title;
                     tr.appendChild(td);
 
                     td = document.createElement('td');
-                    td.innerHTML = collection.theme;
-                    tr.appendChild(td);
-
-                    td = document.createElement('td');
-                    td.innerHTML = collection.description;
-                    tr.appendChild(td);
-
-                    td = document.createElement('td');
-                    td.innerHTML = collection.size;
+                    td.innerHTML = item.tags;
                     tr.appendChild(td);
 
                     td = document.createElement('td');
@@ -85,7 +62,7 @@
                     i.className = "bi bi-pencil";
                     a.appendChild(i);
                     a.className = "btn btn-outline-success"
-                    a.href = "/Collections/EditCollection?collectionId=" + collection.id;
+                    a.href = "/Items/EditItem?itemId=" + item.id;
                     td.appendChild(a);
 
                     a = document.createElement('a');
@@ -93,18 +70,18 @@
                     i.className = "bi bi-trash";
                     a.appendChild(i);
                     a.className = "btn btn-outline-danger";
-                    a.href = "/Collections/DeleteCollection?collectionId=" + collection.id;
+                    a.href = "/Items/DeleteItem?itemId=" + item.id;
                     td.appendChild(a);
 
                     tr.appendChild(td);
 
-                    collectionsTable.append(tr);
+                    itemsTable.append(tr);
                 });
-                setTimeout(updateCollectionsList, 5000);
+                setTimeout(updateItemsList, 5000);
             })
             .catch(e => {
                 console.log('Error: ', e);
-                setTimeout(updateCollectionsList, 5000);
+                setTimeout(updateItemsList, 5000);
             });
     }
 
@@ -115,3 +92,4 @@
         }
     }
 </script>
+

@@ -7,6 +7,7 @@
 
   <ItemGroup>
     <PackageReference Include="bootstrap" Version="5.2.1" />
+    <PackageReference Include="dropzone" Version="4.3.0" />
     <PackageReference Include="Microsoft.AspNetCore.Identity.EntityFrameworkCore" Version="3.1.29" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="3.1.29" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.Tools" Version="3.1.29">

@@ -15,19 +15,38 @@
         @*<span asp-validation-for="UserName"></span><br />*@
     </div>
     <div>
-        <input type="checkbox" asp-for="IsAdmin" value="true"/>
+        @if (Model.IsAdmin)
+        {
+            <input type="checkbox" asp-for="IsAdmin" value="true" checked/>
+        }
+        else
+        {
+            <input type="checkbox" asp-for="IsAdmin" value="true" />
+        }
         <label asp-for="IsAdmin"></label><br />
         @*<span asp-validation-for="UserName"></span><br />*@
     </div>
     <div>
         <label asp-for="Status"></label><br />
         <select asp-for="Status">
-            <option value="active">active</option>
-            <option value="blocked">blocked</option>
+            @if (Model.Status.Equals("active"))
+            {
+                <option id="activeOption" value="active" selected>active</option>
+                <option id="blockedOption" value="blocked">blocked</option>
+            } else
+            {
+                <option id="activeOption" value="active">active</option>
+                <option id="blockedOption" value="blocked" selected>blocked</option>
+            }
         </select><br />
+        
         @*<span asp-validation-for="Email"></span>*@
     </div>
     <div>
         <input type="submit" value="Save changes" />
     </div>
 </form>
+
+<script>
+    if (document.getElementById())
+</script>

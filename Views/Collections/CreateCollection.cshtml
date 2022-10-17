@@ -1,0 +1,88 @@
+﻿@model CollectionsApp.ViewModels.CreateCollectionViewModel
+
+<div class="form-group">
+    <h1 class="h1 text-primary">Create collection</h1>
+
+    <form method="post" asp-controller="Collections" asp-action="CreateCollection" asp-route-collectionsOwnerId="@ViewBag.collectionsOwnerId">
+        <div asp-validation-summary="All"></div>
+
+        <div>
+            <label asp-for="Title"></label><br />
+            <input asp-for="Title" />
+            <br /><br />
+        </div>
+
+        <div>
+            <label asp-for="Theme"></label><br />
+            <select asp-for="Theme">
+                <option selected value="books">books</option>
+                <option value="plants">plants</option>
+                <option value="toys">toys</option>
+            </select><br /><br />
+        </div>
+
+        <div>
+            <label asp-for="Description"></label><br />
+            <textarea asp-for="Description"></textarea>
+            <br /><br />
+        </div>
+
+
+        <div>
+            <label>Additional fields</label><br />
+        </div>
+        <div class="form-row">
+            <div>
+                <label>integer:</label><br />
+                <input asp-for="IntegerField1" /><br />
+                <input asp-for="IntegerField2" /><br />
+                <input asp-for="IntegerField3" /><br />
+            </div>
+
+            <div>
+                <label>string:</label><br />
+                <input asp-for="StringField1" /><br />
+                <input asp-for="StringField2" /><br />
+                <input asp-for="StringField3" /><br />
+            </div>
+
+            <div>
+                <label>multistring:</label><br />
+                <input asp-for="MultiStringField1" /><br />
+                <input asp-for="MultiStringField2" /><br />
+                <input asp-for="MultiStringField3" /><br />
+            </div>
+
+            <div>
+                <label>boolean:</label><br />
+                <input asp-for="BoolField1" /><br />
+                <input asp-for="BoolField2" /><br />
+                <input asp-for="BoolField3" /><br />
+            </div>
+
+            <div>
+                <label>date:</label><br />
+                <input asp-for="DateField1" /><br />
+                <input asp-for="DateField2" /><br />
+                <input asp-for="DateField3" /><br />
+            </div>
+        </div>
+
+
+        <div>
+            <br /><input type="submit" class="btn btn-primary" value="Create" /><br />
+        </div>
+    </form>
+</div>
+
+
+
+@*<div class="jumbotron">
+    <form action="~/Home/SaveUploadedFile" method="post" enctype="multipart/form-data" class="dropzone" id="dropzoneForm" style="width: 50px; background: none; border: none;">
+        <div class="fallback">
+            <input name="file" type="file" multiple />
+            <input type="submit" value="Upload" />
+        </div>
+    </form>
+</div>*@
+

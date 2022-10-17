@@ -13,7 +13,7 @@ namespace CollectionsApp
     {
         public static async Task InitializeAsync(UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
         {
-            string[] roles = { "admin"};
+            string[] roles = { "admin", "active user"};
             foreach(string roleName in roles)
             {
                 await AddRoleIfNotExists(roleManager, roleName);
@@ -33,11 +33,11 @@ namespace CollectionsApp
         {
             if (await userManager.FindByNameAsync(adminEmail) == null)
             {
-                User adminUser = new User { Email = adminEmail, UserName = adminEmail, Status = "active" };
+                User adminUser = new User { Email = adminEmail, UserName = adminEmail, Status = "active", EmailConfirmed = true };
                 IdentityResult result = await userManager.CreateAsync(adminUser, adminPassword);
                 if (result.Succeeded)
                 {
-                    await userManager.AddToRoleAsync(adminUser, adminRoleName);
+                    await userManager.AddToRolesAsync(adminUser, new string[]{ adminRoleName, "active user" });
                 }
             }
         }
