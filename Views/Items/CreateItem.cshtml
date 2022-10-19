@@ -18,32 +18,68 @@
             <br />
         </div>
 
-        @foreach (var field in Model.Fields)
+        @{
+            int index = 0;
+        }
+        @foreach (var field in Model.ItemFields)
         {
-            <div>
-                @if (!field.Type.Equals("checkbox")) { 
-                    <label for="@field.Title">@field.Title</label><br />
-                }
-                
-                @if (field.Type.Equals("textarea"))
+            <input type="hidden" name="itemFields[@index].Title" value="@field.Title" />
+            <input type="hidden" name="itemFields[@index].InputType" value="@field.InputType" />
+            @if (field.InputType.Equals("checkbox"))
+            {
+                <input type="checkbox" name="itemFields[@index].Value" id="@field.Title" />
+                <label for="@field.Title">@field.Title</label><br />
+            }
+            else
+            {
+                <label for="@field.Title">@field.Title</label><br />
+                @if (field.InputType.Equals("textarea"))
                 {
-                    <textarea name="@field.Title" id="@field.Title"></textarea>
+                    <textarea name="itemFields[@index].Value" id="@field.Title"></textarea>
+                }
+                else if (field.InputType.Equals("text"))
+                {
+                    <input type="text" name="itemFields[@index].Value" id="@field.Title" maxlength="256" />
                 }
                 else
                 {
-                    <input type="@field.Type" name="@field.Title" id="@field.Title" />
+                    <input type="@field.InputType" name="itemFields[@index].Value" id="@field.Title" />
+
                 }
+            }
+        }
 
-                @if (field.Type.Equals("checkbox")) { 
-                    <label for="@field.Title">@field.Title</label>
-                }
-                <br /><br />
-            </div>
-         }
-
-
-                <div>
-                    <br /><input type="submit" class="btn btn-primary" value="Create" /><br />
-                </div>
-            </form>
+        <div>
+            <br /><input type="submit" class="btn btn-primary" value="Create" /><br />
+        </div>
+    </form>
 </div>
+
+@*@foreach (var field in Model.Fields)
+    {
+        <div>
+            @if (field.InputType.Equals("checkbox"))
+            {
+                <label for="@field.Title">@field.Title</label><br />
+                <input type="checkbox" name="@field.Title" id="@field.Title" />
+            }
+            else
+            {
+                <label for="@field.Title">@field.Title</label><br />
+                @if (field.InputType.Equals("textarea"))
+                {
+                    <textarea name="@field.Title" id="@field.Title"></textarea>
+                }
+                else if (field.InputType.Equals("text"))
+                {
+                    <input type="text" name="@field.Title" id="@field.Title" maxlength="256" />
+                }
+                else
+                {
+                    <input type="@field.InputType" name="@field.Title" id="@field.Title" />
+
+                }
+            }
+            <br /><br />
+        </div>
+    }*@

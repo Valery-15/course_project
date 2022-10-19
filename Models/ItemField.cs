@@ -5,9 +5,19 @@ using System.Threading.Tasks;
 
 namespace CollectionsApp.Models
 {
-    public class ItemField
+    public class ItemField : CollectionField
     {
-        public string Title;
-        public string Type;
+        public ItemField()
+        {
+
+        }
+
+        public ItemField(CollectionField collectionField)
+        {
+            Title = collectionField.Title;
+            InputType = collectionField.InputType;
+        }
+
+        public string Value { get; set; }
     }
 }

@@ -11,7 +11,7 @@ namespace CollectionsApp
 {
     public class RoleInitializer
     {
-        public static async Task InitializeAsync(UserManager<User> userManager, RoleManager<IdentityRole> roleManager)
+        public static async Task InitializeAsync(UserManager<IdentityUser> userManager, RoleManager<IdentityRole> roleManager)
         {
             string[] roles = { "admin", "active user"};
             foreach(string roleName in roles)
@@ -29,11 +29,11 @@ namespace CollectionsApp
             }
         }
 
-        public static async Task AddAdminUserIfNotExists(UserManager<User> userManager, string adminEmail, string adminPassword, string adminRoleName)
+        public static async Task AddAdminUserIfNotExists(UserManager<IdentityUser> userManager, string adminEmail, string adminPassword, string adminRoleName)
         {
             if (await userManager.FindByNameAsync(adminEmail) == null)
             {
-                User adminUser = new User { Email = adminEmail, UserName = adminEmail, Status = "active", EmailConfirmed = true };
+                IdentityUser adminUser = new IdentityUser { Email = adminEmail, UserName = adminEmail, EmailConfirmed = true };
                 IdentityResult result = await userManager.CreateAsync(adminUser, adminPassword);
                 if (result.Succeeded)
                 {

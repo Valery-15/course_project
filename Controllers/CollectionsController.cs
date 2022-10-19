@@ -2,6 +2,7 @@
 using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
+using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using CollectionsApp.Models;
 using Microsoft.AspNetCore.Identity;
@@ -15,16 +16,16 @@ namespace CollectionsApp.Controllers
     [Authorize(Roles = "active user")]
     public class CollectionsController : Controller
     {
-        private readonly UserManager<User> _userManager;
+        private readonly UserManager<IdentityUser> _userManager;
         private readonly DbContextOptions<ApplicationContext> _options;
 
-        public CollectionsController(UserManager<User> userManager)
+        public CollectionsController(UserManager<IdentityUser> userManager)
         {
             this._userManager = userManager;
-            this._options = buildOptions();
+            this._options = BuildOptions();
         }
 
-        private DbContextOptions<ApplicationContext> buildOptions()
+        private DbContextOptions<ApplicationContext>BuildOptions()
         {
             var builder = new ConfigurationBuilder();
             builder.AddJsonFile("appsettings.json");
@@ -36,7 +37,7 @@ namespace CollectionsApp.Controllers
                     .Options;
         }
 
-        public IActionResult Index(string collectionsOwnerId)
+        public IActionResult CollectionsList(string collectionsOwnerId)
         {
             string currentUserId = _userManager.GetUserId(this.User);
             ViewBag.collectionsOwnerId = collectionsOwnerId;
@@ -52,54 +53,27 @@ namespace CollectionsApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateCollection(string collectionsOwnerId, CreateCollectionViewModel model)
+        public async Task<IActionResult> CreateCollection(string collectionsOwnerId, CreateCollectionViewModel model,
+            CollectionField[] collectionFields)
         {
-
             if (ModelState.IsValid)
             {
                 if(!isCollectionTitleUnique(collectionsOwnerId, model.Title))
                 {
                     ModelState.AddModelError(string.Empty, "Title \"" + model.Title + "\" is already taken.");
-                    ViewBag.collectionsOwnerId = collectionsOwnerId;
-                    return View(model);
                 }
-
-                if (model.ContainsFieldNamesDuplicates())
+                else if (ContainsCollectionFieldTitlesDuplicates(collectionFields))
                 {
-                    ModelState.AddModelError(string.Empty, "Field names contain duplicates.");
-                    ViewBag.collectionsOwnerId = collectionsOwnerId;
-                    return View(model);
+                    ModelState.AddModelError(string.Empty, "Collection field titles can't contain duplicates.");
                 }
-                
-                using ApplicationContext db = new ApplicationContext(this._options);
-
-                Collection collectionToAdd = new Collection
+                else
                 {
-                    UserId = collectionsOwnerId,
-                    Title = model.Title,
-                    Description = model.Description,
-                    Theme = model.Theme,
-                    ImageUrl = model.ImageUrl,
-                    IntegerField1 = model.IntegerField1,
-                    IntegerField2 = model.IntegerField2,
-                    IntegerField3 = model.IntegerField3,
-                    MultiStringField1 = model.MultiStringField1,
-                    MultiStringField2 = model.MultiStringField2,
-                    MultiStringField3 = model.MultiStringField3,
-                    StringField1 = model.StringField1,
-                    StringField2 = model.StringField2,
-                    StringField3 = model.StringField3,
-                    BoolField1 = model.BoolField1,
-                    BoolField2 = model.BoolField2,
-                    BoolField3 = model.BoolField3,
-                    DateField1 = model.DateField1,
-                    DateField2 = model.DateField2,
-                    DateField3 = model.DateField3
-                };
-
-                await db.Collections.AddAsync(collectionToAdd);
-                db.SaveChanges();
-                return RedirectToAction("Index", new { collectionsOwnerId = collectionsOwnerId });
+                    using ApplicationContext db = new ApplicationContext(this._options);
+                    Collection collectionToAdd = MakeCollection(collectionsOwnerId, model, collectionFields);
+                    await db.Collections.AddAsync(collectionToAdd);
+                    db.SaveChanges();
+                    return RedirectToAction("CollectionsList", new { collectionsOwnerId = collectionsOwnerId });
+                } 
             }
             ViewBag.collectionsOwnerId = collectionsOwnerId;
             return View(model);
@@ -130,7 +104,7 @@ namespace CollectionsApp.Controllers
                 db.Collections.Update(editedCollection);
                 db.SaveChanges();
             }
-            return RedirectToAction("Index", new { collectionsOwnerId = editedCollection.UserId });
+            return RedirectToAction("CollectionsList", new { collectionsOwnerId = editedCollection.UserId });
         }
 
         [HttpGet]
@@ -143,9 +117,8 @@ namespace CollectionsApp.Controllers
                 db.Collections.Remove(collectionToDelete);
                 db.SaveChanges();
             }
-            return RedirectToAction("Index", new { collectionsOwnerId = collectionToDelete.UserId});
+            return RedirectToAction("CollectionsList", new { collectionsOwnerId = collectionToDelete.UserId});
         }
-
 
         [HttpGet]
         public JsonResult GetCollectionsList(string userId)
@@ -155,7 +128,8 @@ namespace CollectionsApp.Controllers
             return Json(userCollections);
         }
 
-        public bool isCollectionTitleUnique(string userId, string collectionTitle)
+
+        private bool isCollectionTitleUnique(string userId, string collectionTitle)
         {
             using ApplicationContext db = new ApplicationContext(this._options);
             var userCollections = db.Collections.Where(c => c.UserId.Equals(userId)).ToList();
@@ -167,6 +141,37 @@ namespace CollectionsApp.Controllers
                 }
             }
             return true;
+        }
+
+        private bool ContainsCollectionFieldTitlesDuplicates(CollectionField[] collectionFields)
+        {
+            var fieldTitlesList = new List<string>(
+                            new string[] { "Title", "Theme", "Description", "Size" }
+                        );
+            foreach (var collectionField in collectionFields)
+            {
+                fieldTitlesList.Add(collectionField.Title);
+            }
+            fieldTitlesList.RemoveAll(s => s == null);
+            return fieldTitlesList.Distinct().Count() != fieldTitlesList.Count;
+        }
+
+        
+        private Collection MakeCollection(string collectionsOwnerId, CreateCollectionViewModel model, CollectionField[] collectionFields)
+        {
+            var collectionFieldsList = new List<CollectionField>(collectionFields);
+            collectionFieldsList.RemoveAll(s => s.Title == null);
+            string jsonCollectionFieldsList = JsonSerializer.Serialize(collectionFieldsList.ToArray());
+            var collection = new Collection
+            {
+                UserId = collectionsOwnerId,
+                Title = model.Title,
+                Description = model.Description,
+                Theme = model.Theme,
+                ImageUrl = model.ImageUrl,
+                AdditionalFields = jsonCollectionFieldsList
+            };
+            return collection;
         }
 
     }

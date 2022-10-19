@@ -1,0 +1,45 @@
+﻿@model CollectionsApp.ViewModels.ItemViewModel
+
+<div>
+    <label>Collection: @Model.CollectionTitle</label>
+
+    <div class="card" style="width: 18rem;">
+        <div class="card-header">
+            @Model.Title
+        </div>
+        <ul class="list-group list-group-flush">
+            @foreach (var field in Model.AdditionalFields)
+            {
+                <li class="list-group-item">@field.Title: @field.Value</li>
+            }
+        </ul>
+    </div>
+
+    <div>
+        <button>
+            @if (Model.isCurrentUserLikedItem)
+            {
+                <i class="bi bi-heart-fill"></i>
+            }
+            else
+            {
+                <i class="bi bi-heart"></i>
+            }
+        </button>
+        <label>@Model.LikesNumber</label>
+    </div>
+
+    <div>
+        @foreach (var comment in Model.Comments)
+        {
+            <div class="card" style="width: 18rem;">
+                <div class="card-header">
+                    @comment.User.UserName
+                </div>
+                <div class="card-body">
+                    @comment.Body
+                </div>
+            </div>
+        }
+    </div>
+</div>

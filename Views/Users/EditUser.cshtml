@@ -1,52 +1,46 @@
 ﻿@model CollectionsApp.ViewModels.EditUserViewModel
 
-<h1>Edit user</h1>
-<form method="post" asp-controller="Users" asp-action="EditUser">
-    <div asp-validation-summary="All"></div>
-    <input type="hidden" name="userId" value="@ViewBag.UserId">
-    <div>
-        <label asp-for="Email"></label><br />
-        <input asp-for="Email" />
-        @*<span asp-validation-for="Email"></span>*@
-    </div>
-    <div>
-        <label asp-for="UserName"></label><br />
-        <input asp-for="UserName" /><br />
-        @*<span asp-validation-for="UserName"></span><br />*@
-    </div>
-    <div>
-        @if (Model.IsAdmin)
-        {
-            <input type="checkbox" asp-for="IsAdmin" value="true" checked/>
-        }
-        else
-        {
-            <input type="checkbox" asp-for="IsAdmin" value="true" />
-        }
-        <label asp-for="IsAdmin"></label><br />
-        @*<span asp-validation-for="UserName"></span><br />*@
-    </div>
-    <div>
-        <label asp-for="Status"></label><br />
-        <select asp-for="Status">
-            @if (Model.Status.Equals("active"))
+<div class="form-group">
+    <h1 class="h1 text-primary">Edit user</h1>
+    <form method="post" asp-controller="Users" asp-action="EditUser">
+        <div asp-validation-summary="All"></div>
+        <input type="hidden" name="userId" value="@ViewBag.UserId">
+        <div>
+            <label asp-for="Email"></label><br />
+            <input asp-for="Email" /><br /><br />
+        </div>
+        <div>
+            <label asp-for="UserName"></label><br />
+            <input asp-for="UserName" /><br /><br />
+        </div>
+        <div>
+            <label asp-for="IsActive"></label><br />
+            <select asp-for="IsActive">
+                @if (Model.IsActive)
+                {
+                    <option id="activeOption" value="true" selected>active</option>
+                    <option id="blockedOption" value="false">blocked</option>
+                }
+                else
+                {
+                    <option id="activeOption" value="true">active</option>
+                    <option id="blockedOption" value="false" selected>blocked</option>
+                }
+            </select><br /><br />
+        </div>
+        <div>
+            @if (Model.IsAdmin)
             {
-                <option id="activeOption" value="active" selected>active</option>
-                <option id="blockedOption" value="blocked">blocked</option>
-            } else
-            {
-                <option id="activeOption" value="active">active</option>
-                <option id="blockedOption" value="blocked" selected>blocked</option>
+                <input type="checkbox" asp-for="IsAdmin" value="true" checked />
             }
-        </select><br />
-        
-        @*<span asp-validation-for="Email"></span>*@
-    </div>
-    <div>
-        <input type="submit" value="Save changes" />
-    </div>
-</form>
-
-<script>
-    if (document.getElementById())
-</script>
+            else
+            {
+                <input type="checkbox" asp-for="IsAdmin" value="true" />
+            }
+            <label asp-for="IsAdmin"></label><br /><br />
+        </div>
+        <div>
+            <input type="submit" class="btn btn-primary" value="Save changes" />
+        </div>
+    </form>
+</div>

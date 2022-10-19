@@ -17,12 +17,12 @@ namespace CoollectionsApp.Controllers
     [Authorize(Roles = "active user")]
     public class UsersController : Controller
     {
-        private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly SignInManager<IdentityUser> _signInManager;
         private readonly DbContextOptions<ApplicationContext> _options;
 
-        public UsersController(UserManager<User> userManager,
-            SignInManager<User> signInManager)
+        public UsersController(UserManager<IdentityUser> userManager,
+            SignInManager<IdentityUser> signInManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -39,114 +39,107 @@ namespace CoollectionsApp.Controllers
             return optionsBuilder.UseSqlServer(ConnectionString).Options;
         }
 
-        public IActionResult Index()
-        {
-            return View();
-        }
+        public IActionResult UsersList() => View();
 
         [HttpGet]
-        public IActionResult CreateUser()
-        {
-            return View();
-        }
+        public IActionResult CreateUser() => View();
 
         [HttpPost]
         public async Task<IActionResult> CreateUser(RegisterViewModel model)
         {
-            if (ModelState.IsValid)
+            if (!ModelState.IsValid) return View(model);
+            IdentityUser user = new IdentityUser { Email = model.Email, UserName = model.UserName, EmailConfirmed = true };
+            var result = await _userManager.CreateAsync(user, model.Password);
+            if (result.Succeeded)
             {
-                User user = new User { Email = model.Email, UserName = model.UserName, EmailConfirmed = true, Status = "active" };
-                var result = await _userManager.CreateAsync(user, model.Password);
-                if (result.Succeeded)
-                {
-                    return RedirectToAction("Index");
-                }
-                else
-                {
-                    AddModelErrors(result.Errors, ModelState);
-                }
+                await _userManager.AddToRoleAsync(user, "active user");
+                return RedirectToAction("UsersList");
             }
-            return View(model);
+            else
+            {
+                AddModelErrors(result.Errors, ModelState);
+                return View(model);
+            } 
         }
-
-
 
         [HttpGet]
         public async Task<IActionResult> EditUser(string userId)
         {
-            User user = await _userManager.FindByIdAsync(userId);
-            if (user != null)
-            {
-                EditUserViewModel userEditViewModel = new EditUserViewModel { Email = user.Email, UserName = user.UserName, Status = user.Status, IsAdmin = await _userManager.IsInRoleAsync(user, "admin")};
-                ViewBag.UserId = userId;
-                return View(userEditViewModel);
-            } 
-            else
-            {
-                return RedirectToAction("Index","Users");
-            }
+            IdentityUser user = await _userManager.FindByIdAsync(userId);
+            if (user == null) return RedirectToAction("UsersList");
+            EditUserViewModel userEditViewModel = new EditUserViewModel { Email = user.Email, UserName = user.UserName, IsAdmin = await _userManager.IsInRoleAsync(user, "admin"), IsActive = await _userManager.IsInRoleAsync(user, "active user") };
+            ViewBag.UserId = userId;
+            return View(userEditViewModel);
         }
 
         [HttpPost]
         public async Task<IActionResult> EditUser(EditUserViewModel model, string userId)
         {
-            User userToEdit = await _userManager.FindByIdAsync(userId);
-            if (userToEdit != null)
+            IdentityUser userToEdit = await _userManager.FindByIdAsync(userId);
+            if(userToEdit == null) return RedirectToAction("UsersList");
+
+            userToEdit.Email = model.Email;
+            userToEdit.UserName = model.UserName;
+            //status
+            if (model.IsActive)
             {
-                userToEdit.Email = model.Email;
-                userToEdit.UserName = model.UserName;
-                userToEdit.Status = model.Status;
-                if (userToEdit.Status.Equals("active"))
-                {
-                    await _userManager.AddToRoleAsync(userToEdit, "active user");
-                }
-                else
-                {
-                    await _userManager.RemoveFromRoleAsync(userToEdit, "active user");
-                }
-                var result = await _userManager.UpdateAsync(userToEdit);
-                if (model.IsAdmin)
-                {
-                    await _userManager.AddToRoleAsync(userToEdit, "admin");
-                } else
-                {
-                    await _userManager.RemoveFromRoleAsync(userToEdit, "admin");
-                }
+                await _userManager.AddToRoleAsync(userToEdit, "active user");
             }
-            
-            return RedirectToAction("Index","Users");
+            else
+            {
+                await _userManager.RemoveFromRoleAsync(userToEdit, "active user");
+            }
+            if (model.IsAdmin)
+            {
+                await _userManager.AddToRoleAsync(userToEdit, "admin");
+            }
+            else
+            {
+                await _userManager.RemoveFromRoleAsync(userToEdit, "admin");
+            }
+            var result = await _userManager.UpdateAsync(userToEdit);
+
+            var currentUser = await _userManager.GetUserAsync(this.User);
+            await _signInManager.RefreshSignInAsync(currentUser);
+            return RedirectToAction("UsersList");
         }
 
         [HttpGet]
         public async Task<IActionResult> DeleteUser(string userId)
         {
-            User user = await _userManager.FindByIdAsync(userId);
+            IdentityUser user = await _userManager.FindByIdAsync(userId);
             if (user != null)
             {
                 var result = await _userManager.DeleteAsync(user);
+                var currentUser = await _userManager.GetUserAsync(this.User);
+                if (currentUser == null)
+                {
+                    return RedirectToAction("Index", "Home");
+                }
             }
-            return RedirectToAction("Index");
+            return RedirectToAction("UsersList");
         }
 
         [HttpGet]
         public async Task<IActionResult> ChangeUserStatus(string userId, string currentStatus)
         {
-            string changedStatus = currentStatus.Equals("active") ? "blocked" : "active";
+            bool isActive = !currentStatus.Equals("active");
 
-            User user = await _userManager.FindByIdAsync(userId);
+            IdentityUser user = await _userManager.FindByIdAsync(userId);
+
             if (user != null)
             {
-                if (changedStatus.Equals("active"))
+                if (isActive)
                 {
                     await _userManager.AddToRoleAsync(user, "active user");
                 } else
                 {
                     await _userManager.RemoveFromRoleAsync(user, "active user");
                 }
-                user.Status = changedStatus;
-                var result = await _userManager.UpdateAsync(user);
+                var currentUser = await _userManager.GetUserAsync(this.User);
+                await _signInManager.RefreshSignInAsync(currentUser);
             }
-            return RedirectToAction("Index");
+            return RedirectToAction("UsersList");
         }
 
 
@@ -158,7 +151,14 @@ namespace CoollectionsApp.Controllers
             var usersList = new List<UsersTableViewModel>();
             foreach(var user in usersTableList)
             {
-                usersList.Add(new UsersTableViewModel { Id = user.Id, Email = user.Email, UserName = user.UserName, IsAdmin = await _userManager.IsInRoleAsync(user, "admin"), Status = user.Status });
+                usersList.Add(new UsersTableViewModel
+                {
+                    Id = user.Id,
+                    Email = user.Email,
+                    UserName = user.UserName,
+                    IsAdmin = await _userManager.IsInRoleAsync(user, "admin"),
+                    Status = (await _userManager.IsInRoleAsync(user, "active user")) ? "active" : "blocked"
+                });
             }
             return Json(usersList);
         }

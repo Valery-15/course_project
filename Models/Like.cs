@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
+using Microsoft.AspNetCore.Identity;
 
 namespace CollectionsApp.Models
 {
@@ -13,6 +14,6 @@ namespace CollectionsApp.Models
         public int ItemId { get; set; }
 
         public virtual Item Item { get; set; }
-        public virtual User User { get; set; }
+        public virtual IdentityUser User { get; set; }
     }
 }

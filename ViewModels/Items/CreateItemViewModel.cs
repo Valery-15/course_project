@@ -11,7 +11,7 @@ namespace CollectionsApp.ViewModels
     {
         public CreateItemViewModel()
         {
-            Fields = new List<ItemField>();
+            ItemFields = new List<ItemField>();
         }
 
         [Required]
@@ -22,6 +22,6 @@ namespace CollectionsApp.ViewModels
         [MaxLength(150)]
         public string Tags { get; set; }
 
-        public List<ItemField> Fields  { get; set; } 
+        public List<ItemField> ItemFields { get; set; }
     }
 }

@@ -8,7 +8,7 @@ using Microsoft.EntityFrameworkCore;
 
 namespace CollectionsApp.Models
 {
-    public class ApplicationContext : IdentityDbContext<User>
+    public class ApplicationContext : IdentityDbContext<IdentityUser>
     {
         public ApplicationContext(DbContextOptions<ApplicationContext> options)
             : base(options)

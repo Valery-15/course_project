@@ -22,6 +22,6 @@ namespace CollectionsApp.ViewModels
 
         [Required]
         [Display(Name = "Status")]
-        public string Status { get; set; }
+        public bool IsActive { get; set; }
     }
 }

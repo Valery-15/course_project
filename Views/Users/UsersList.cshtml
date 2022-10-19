@@ -53,7 +53,7 @@
                     var a = document.createElement('a');
                     var linkText = document.createTextNode(user.userName);
                     a.appendChild(linkText);
-                    a.href = "/Collections/Index?collectionsOwnerId=" + user.id;
+                    a.href = "/Collections/CollectionsList?collectionsOwnerId=" + user.id;
                     td.appendChild(a);
                     tr.appendChild(td);
 

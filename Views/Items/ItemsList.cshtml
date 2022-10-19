@@ -49,7 +49,11 @@
                     //tr.appendChild(td);
 
                     td = document.createElement('td');
-                    td.innerHTML = item.title;
+                    var a = document.createElement('a');
+                    var linkText = document.createTextNode(item.title);
+                    a.appendChild(linkText);
+                    a.href = "/Items/Item?itemId=" + item.id;
+                    td.appendChild(a);
                     tr.appendChild(td);
 
                     td = document.createElement('td');

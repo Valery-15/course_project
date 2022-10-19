@@ -32,42 +32,25 @@
             <label>Additional fields</label><br />
         </div>
         <div class="form-row">
-            <div>
-                <label>integer:</label><br />
-                <input asp-for="IntegerField1" /><br />
-                <input asp-for="IntegerField2" /><br />
-                <input asp-for="IntegerField3" /><br />
-            </div>
-
-            <div>
-                <label>string:</label><br />
-                <input asp-for="StringField1" /><br />
-                <input asp-for="StringField2" /><br />
-                <input asp-for="StringField3" /><br />
-            </div>
-
-            <div>
-                <label>multistring:</label><br />
-                <input asp-for="MultiStringField1" /><br />
-                <input asp-for="MultiStringField2" /><br />
-                <input asp-for="MultiStringField3" /><br />
-            </div>
-
-            <div>
-                <label>boolean:</label><br />
-                <input asp-for="BoolField1" /><br />
-                <input asp-for="BoolField2" /><br />
-                <input asp-for="BoolField3" /><br />
-            </div>
-
-            <div>
-                <label>date:</label><br />
-                <input asp-for="DateField1" /><br />
-                <input asp-for="DateField2" /><br />
-                <input asp-for="DateField3" /><br />
-            </div>
+                @{
+                    var inputTypes = new List<string>
+                    (new string[] { "number", "text", "textarea", "date", "checkbox" });
+                    int index = 0;
+                }
+                @foreach (var inputType in inputTypes)
+                {
+                    <div>
+                        <br /><label>@inputType</label>
+                    @for (int i = 0; i < 3; i++)
+                    {
+                        <input name="collectionFields[@index].Title" />
+                        <input type="hidden" name="collectionFields[@index].InputType" value="@inputType" />
+                        index++;
+                    }
+                    <br />
+                    </div>
+                }
         </div>
-
 
         <div>
             <br /><input type="submit" class="btn btn-primary" value="Create" /><br />

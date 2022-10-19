@@ -14,11 +14,11 @@ namespace CollectionsApp.Controllers
 {
     public class AccountController : Controller
     {
-        private readonly UserManager<User> _userManager;
-        private readonly SignInManager<User> _signInManager;
+        private readonly UserManager<IdentityUser> _userManager;
+        private readonly SignInManager<IdentityUser> _signInManager;
 
-        public AccountController(UserManager<User> userManager, 
-            SignInManager<User> signInManager)
+        public AccountController(UserManager<IdentityUser> userManager, 
+            SignInManager<IdentityUser> signInManager)
         {
             _userManager = userManager;
             _signInManager = signInManager;
@@ -31,7 +31,7 @@ namespace CollectionsApp.Controllers
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid) return View(model);
-            User user = new User { Email = model.Email, UserName = model.UserName, EmailConfirmed = true, Status = "active"};
+            IdentityUser user = new IdentityUser { Email = model.Email, UserName = model.UserName, EmailConfirmed = true};
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
@@ -57,13 +57,13 @@ namespace CollectionsApp.Controllers
             {
                 if(!await _userManager.IsInRoleAsync(user, "active user"))
                 {
-                    RedirectToAction("AccessDenied");
+                    return RedirectToAction("AccessDenied");
                 }
                 var result =
                     await _signInManager.PasswordSignInAsync(user, model.Password, false, false);
                 if (result.Succeeded)
                 {
-                    return RedirectToAction("Index", "Collections", new {collectionsOwnerId = user.Id});
+                    return RedirectToAction("CollectionsList", "Collections", new {collectionsOwnerId = user.Id});
                 }
                 else
                 {

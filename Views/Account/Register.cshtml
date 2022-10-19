@@ -1,25 +1,27 @@
 ﻿@model CollectionsApp.ViewModels.RegisterViewModel
 
-<h1 class="h1 text-primary">Registration</h1>
-<form method="post" asp-controller="Account" asp-action="Register">
-    <div asp-validation-summary="All"></div>
-    <div>
-        <br /><label asp-for="Email"></label>
-        <br /><input asp-for="Email" />
-    </div>
-    <div>
-        <br /><label asp-for="UserName"></label>
-        <br /><input asp-for="UserName" />
-    </div>
-    <div>
-        <br /><label asp-for="Password"></label>
-        <br /><input asp-for="Password" />
-    </div>
-    <div>
-        <br /><label asp-for="PasswordConfirm"></label>
-        <br /><input asp-for="PasswordConfirm" />
-    </div>
-    <div>
-        <br /><input type="submit" class="btn btn-primary" value="Register" />
-    </div>
-</form>
+<div class="form-group">
+    <h1 class="h1 text-primary">Registration</h1>
+    <form method="post" asp-controller="Account" asp-action="Register">
+        <div asp-validation-summary="All"></div>
+        <div>
+            <br /><label asp-for="Email"></label>
+            <br /><input asp-for="Email" />
+        </div>
+        <div>
+            <br /><label asp-for="UserName"></label>
+            <br /><input asp-for="UserName" />
+        </div>
+        <div>
+            <br /><label asp-for="Password"></label>
+            <br /><input asp-for="Password" />
+        </div>
+        <div>
+            <br /><label asp-for="PasswordConfirm"></label>
+            <br /><input asp-for="PasswordConfirm" />
+        </div>
+        <div>
+            <br /><input type="submit" class="btn btn-primary" value="Register" />
+        </div>
+    </form>
+</div>
