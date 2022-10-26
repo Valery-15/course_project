@@ -1,20 +1,43 @@
-﻿
+﻿@using Microsoft.AspNetCore.Identity
+@using CollectionsApp.Models
+@using Microsoft.AspNetCore.Mvc;
+@inject SignInManager<IdentityUser> signInManager
+@inject UserManager<IdentityUser> userManager
+
+@{
+    bool isUserSignedIn = signInManager.IsSignedIn(this.User);
+    bool isCurrentUserAdmin = this.User.IsInRole("admin");
+    bool isCurrentUserCollectionOwner = ViewBag.collection.User.Id.Equals(userManager.GetUserId(this.User));
+    string collectionOwner = isCurrentUserCollectionOwner ? "You" : ViewBag.collection.User.UserName;
+}
+
 <div>
-    <nav class="navbar navbar-light bg-success bg-light">
-        <form class="form-inline">
-            <h1>Items</h1>
+    <nav class="navbar">
+        <form>
+            <h3 class="text-info">Collection: @ViewBag.collection.Title</h3>
+            <h6>Theme: @ViewBag.collection.Theme</h6>
+            <h6>Owner: @collectionOwner</h6>
         </form>
-        <form class="form-inline">
-            <a asp-controller="Items" asp-action="CreateItem" asp-route-collectionId="@ViewBag.collectionId" class="btn btn-outline-success"><i class="bi bi-plus-circle"></i></a>
-        </form>
+        @if (isUserSignedIn && (isCurrentUserAdmin || isCurrentUserCollectionOwner))
+        {
+            <form class="form-inline">
+                <a asp-controller="Items" asp-action="CreateItem" asp-route-collectionId="@ViewBag.collection.Id" class="btn btn-outline-success">
+                    <i class="bi bi-plus-circle"></i>
+                </a>
+            </form>
+        }
+
     </nav>
 
-    <table class="table table-striped table-bordered" id="itemsTable">
+    <table class="table table-responsive table-striped" id="itemsTable">
         <thead class="thead-dark">
             <tr>
-                <th>Title</th>
+                <th>Items</th>
                 <th>Tags</th>
-                <th></th>
+                @if (isUserSignedIn && (isCurrentUserAdmin || isCurrentUserCollectionOwner))
+                {
+                    <th></th>
+                }
             </tr>
         </thead>
         <tbody>
@@ -23,7 +46,13 @@
 </div>
 
 <script>
-    var collectionId = '@ViewBag.collectionId';
+    var collectionId = '@ViewBag.collection.Id';
+    var isUserSignedIn = '@isUserSignedIn'.toLowerCase() == 'true';
+    var isCurrentUserAdmin = '@isCurrentUserAdmin'.toLowerCase()=='true';
+    var isCurrentUserCollectionOwner = '@isCurrentUserCollectionOwner'.toLowerCase()=='true';
+
+    console.log(collectionId);
+    console.log(isUserSignedIn);
 
     var itemsTable = document.getElementById('itemsTable');
 
@@ -41,13 +70,6 @@
                     var tr = document.createElement('tr');
                     var td;
 
-                    //td = document.createElement('td');
-                    //var checkbox = document.createElement("INPUT");
-                    //checkbox.setAttribute("type", "checkbox");
-                    //checkbox.id = collection.id;
-                    //td.innerHTML = checkbox;
-                    //tr.appendChild(td);
-
                     td = document.createElement('td');
                     var a = document.createElement('a');
                     var linkText = document.createTextNode(item.title);
@@ -57,27 +79,37 @@
                     tr.appendChild(td);
 
                     td = document.createElement('td');
-                    td.innerHTML = item.tags;
+                    var tags = JSON.parse(item.jsonTags);
+                    console.log(tags);
+                    tags.forEach(tag => {
+                        console.log(tag.Id);
+                        a = document.createElement('a');
+                        linkText = document.createTextNode("#" + tag.TagValue + " ");
+                        a.appendChild(linkText);
+                        a.href = "/Tags/GetItemsByTag?tagId=" + tag.Id;
+                        td.appendChild(a);
+                    });
                     tr.appendChild(td);
 
-                    td = document.createElement('td');
-                    a = document.createElement('a');
-                    var i = document.createElement('i');
-                    i.className = "bi bi-pencil";
-                    a.appendChild(i);
-                    a.className = "btn btn-outline-success"
-                    a.href = "/Items/EditItem?itemId=" + item.id;
-                    td.appendChild(a);
+                    if (isUserSignedIn && (isCurrentUserAdmin || isCurrentUserCollectionOwner)) {
+                        td = document.createElement('td');
+                        a = document.createElement('a');
+                        var i = document.createElement('i');
+                        i.className = "bi bi-pencil";
+                        a.appendChild(i);
+                        a.className = "btn btn-outline-success"
+                        a.href = "/Items/EditItem?itemId=" + item.id;
+                        td.appendChild(a);
 
-                    a = document.createElement('a');
-                    i = document.createElement('i');
-                    i.className = "bi bi-trash";
-                    a.appendChild(i);
-                    a.className = "btn btn-outline-danger";
-                    a.href = "/Items/DeleteItem?itemId=" + item.id;
-                    td.appendChild(a);
-
-                    tr.appendChild(td);
+                        a = document.createElement('a');
+                        i = document.createElement('i');
+                        i.className = "bi bi-trash";
+                        a.appendChild(i);
+                        a.className = "btn btn-outline-danger";
+                        a.href = "/Items/DeleteItem?itemId=" + item.id;
+                        td.appendChild(a);
+                        tr.appendChild(td);
+                    }
 
                     itemsTable.append(tr);
                 });

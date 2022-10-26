@@ -1,5 +1,81 @@
-﻿@{
-    ViewData["Title"] = "Home Page";
+﻿@model CollectionsApp.ViewModels.HomePageViewModel
+
+<div>
+    <div>
+        <label class="h2 text-black">Last added items</label>
+        <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+            @foreach (var item in Model.LatestItems)
+            {
+                <div class="col-sm-3">
+                    <div class="card mb-4 rounded-3 shadow-sm">
+                        <div class="card-header py-3">
+                            <a class="my-0 fw-normal h4 text-info font-italic" href="/Items/Item?itemId=@item.Id">@item.Title</a>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mt-3 mb-4">
+                                <li>
+                                    <a href="/Items/ItemsList?collectionId=@item.CollectionId">@item.Collection.Title</a>
+                                </li>
+                                <li>Author: @item.Author</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            }
+            <br /><br />
+        </div>
+    </div>
+
+    <div>
+        <label class="h2 text-black">Biggest collections</label>
+        <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+            @foreach (var collection in Model.LargestCollections)
+            {
+                <div class="col-sm-3">
+                    <div class="card mb-4 rounded-3 shadow-sm">
+                        <div class="card-header py-3">
+                            <a href="/Items/ItemsList?collectionId=@collection.Id" class="my-0 fw-normal h4 text-danger">@collection.Title</a>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled mt-3 mb-4">
+                                <li>Size: @collection.Size</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+
+            }
+        </div>
+    </div>
+
+    <div id="tagcloud">
+        <label class="h2 text-black">Tag cloud <i class="bi bi-cloud"></i></label>
+        @{
+            int index = Model.PopularTags.Count();
+        }
+        <ul>
+            @foreach (var tag in Model.PopularTags)
+            {
+                <li >
+                    <a href="/Tags/GetItemsByTag?tagId=@tag.Id" rel="@index">@tag.TagValue</a>
+                </li>
+                index--;
+            }
+        </ul>
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/lib/tagcloud/dist/jquery.tagcloud.js"></script>
+
+    <script>
+        $("#tagcloud a").tagcloud({
+            size: { start: 20, end: 36, unit: "px" },
+            color: { start: '#3498DB', end: '#46CFB0' }
+        });
+    </script>
 }
+
+
 
 

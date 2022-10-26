@@ -19,5 +19,8 @@ namespace CollectionsApp.Models
         public DbSet<Item> Items { get; set; }
         public DbSet<Like> Likes { get; set; }
         public DbSet<Comment> Comments { get; set; }
+        public DbSet<ItemTag> ItemTags { get; set; }
+        public DbSet<Tag> Tags { get; set; }
+
     }
 }

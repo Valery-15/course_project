@@ -17,31 +17,20 @@ namespace CollectionsApp.Controllers
     public class CollectionsController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly DbContextOptions<ApplicationContext> _options;
+        private readonly ApplicationContext _db;
 
-        public CollectionsController(UserManager<IdentityUser> userManager)
+        public CollectionsController(UserManager<IdentityUser> userManager,
+            ApplicationContext db)
         {
-            this._userManager = userManager;
-            this._options = BuildOptions();
+            _userManager = userManager;
+            _db = db;
         }
 
-        private DbContextOptions<ApplicationContext>BuildOptions()
-        {
-            var builder = new ConfigurationBuilder();
-            builder.AddJsonFile("appsettings.json");
-            var configuration = builder.Build();
-            string ConnectionString = configuration.GetConnectionString("DefaultConnection");
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationContext>();
-            return optionsBuilder
-                    .UseSqlServer(ConnectionString)
-                    .Options;
-        }
-
+        [AllowAnonymous]
+        [HttpGet]
         public IActionResult CollectionsList(string collectionsOwnerId)
         {
-            string currentUserId = _userManager.GetUserId(this.User);
             ViewBag.collectionsOwnerId = collectionsOwnerId;
-            ViewBag.currentUserId = currentUserId;
             return View();
         }
 
@@ -53,27 +42,16 @@ namespace CollectionsApp.Controllers
         }
 
         [HttpPost]
-        public async Task<IActionResult> CreateCollection(string collectionsOwnerId, CreateCollectionViewModel model,
-            CollectionField[] collectionFields)
+        public async Task<IActionResult> CreateCollection(string collectionsOwnerId, 
+            CreateCollectionViewModel model, CollectionField[] collectionFields)
         {
-            if (ModelState.IsValid)
+            if (ModelState.IsValid & IsCollectionTitleUnique(collectionsOwnerId, model.Title) &
+                    !ContainsCollectionFieldTitlesDuplicates(collectionFields) )
             {
-                if(!isCollectionTitleUnique(collectionsOwnerId, model.Title))
-                {
-                    ModelState.AddModelError(string.Empty, "Title \"" + model.Title + "\" is already taken.");
-                }
-                else if (ContainsCollectionFieldTitlesDuplicates(collectionFields))
-                {
-                    ModelState.AddModelError(string.Empty, "Collection field titles can't contain duplicates.");
-                }
-                else
-                {
-                    using ApplicationContext db = new ApplicationContext(this._options);
-                    Collection collectionToAdd = MakeCollection(collectionsOwnerId, model, collectionFields);
-                    await db.Collections.AddAsync(collectionToAdd);
-                    db.SaveChanges();
-                    return RedirectToAction("CollectionsList", new { collectionsOwnerId = collectionsOwnerId });
-                } 
+                var collectionToAdd = new Collection(collectionsOwnerId, model, collectionFields);
+                await _db.Collections.AddAsync(collectionToAdd);
+                _db.SaveChanges();
+                return RedirectToAction("CollectionsList", new { collectionsOwnerId = collectionsOwnerId });
             }
             ViewBag.collectionsOwnerId = collectionsOwnerId;
             return View(model);
@@ -82,61 +60,55 @@ namespace CollectionsApp.Controllers
         [HttpGet]
         public async Task<IActionResult> EditCollection(int collectionId)
         {
-            using ApplicationContext db = new ApplicationContext(this._options);
-            Collection collectionToEdit = await db.Collections.FindAsync(collectionId);
+            Collection collectionToEdit = await _db.Collections.FindAsync(collectionId);
             ViewBag.CollectionId = collectionId;
             var viewModel = new EditCollectionViewModel { Title = collectionToEdit.Title, Theme = collectionToEdit.Theme, Description = collectionToEdit.Description };
             return View(viewModel);
         }
 
         [HttpPost]
-        public async Task<IActionResult> EditCollection(int collectionId, EditCollectionViewModel model)
+        public IActionResult EditCollection(int collectionId, EditCollectionViewModel model)
         {
-            ApplicationContext db = new ApplicationContext(this._options);
-            Collection editedCollection = await db.Collections.FindAsync(collectionId);
-            if (editedCollection != null)
+            if (!ModelState.IsValid) return View(model);
+            Collection collectionToEdit = _db.Collections.Find(collectionId);
+            if (collectionToEdit != null)
             {
-                editedCollection.Title = model.Title;
-                editedCollection.Theme = model.Theme;
-                editedCollection.Description = model.Description;
-                editedCollection.ImageUrl = model.ImageUrl;
-
-                db.Collections.Update(editedCollection);
-                db.SaveChanges();
+                EditColletionFieldValues(collectionToEdit, model);
+                _db.Collections.Update(collectionToEdit);
+                _db.SaveChanges();
             }
-            return RedirectToAction("CollectionsList", new { collectionsOwnerId = editedCollection.UserId });
+            return RedirectToAction("CollectionsList", new { collectionsOwnerId = collectionToEdit.UserId });
         }
 
         [HttpGet]
-        public async Task<IActionResult> DeleteCollection(int collectionId)
+        public IActionResult DeleteCollection(int collectionId)
         {
-            ApplicationContext db = new ApplicationContext(this._options);
-            Collection collectionToDelete = await db.Collections.FindAsync(collectionId);
+            Collection collectionToDelete = _db.Collections.Find(collectionId);
             if (collectionToDelete != null)
             {
-                db.Collections.Remove(collectionToDelete);
-                db.SaveChanges();
+                _db.Collections.Remove(collectionToDelete);
+                _db.SaveChanges();
             }
             return RedirectToAction("CollectionsList", new { collectionsOwnerId = collectionToDelete.UserId});
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public JsonResult GetCollectionsList(string userId)
         {
-            using ApplicationContext db = new ApplicationContext(this._options);
-            var userCollections = db.Collections.Where(c => c.UserId.Equals(userId)).ToList();
+            var userCollections = _db.Collections.Where(c => c.UserId.Equals(userId)).ToList();
             return Json(userCollections);
         }
 
 
-        private bool isCollectionTitleUnique(string userId, string collectionTitle)
+        private bool IsCollectionTitleUnique(string userId, string collectionTitle)
         {
-            using ApplicationContext db = new ApplicationContext(this._options);
-            var userCollections = db.Collections.Where(c => c.UserId.Equals(userId)).ToList();
+            var userCollections = _db.Collections.Where(c => c.UserId.Equals(userId)).ToList();
             foreach(var collection in userCollections)
             {
                 if (collection.Title.Equals(collectionTitle))
                 {
+                    ModelState.AddModelError(string.Empty, "Title \"" + collectionTitle + "\" is already taken.");
                     return false;
                 }
             }
@@ -146,33 +118,27 @@ namespace CollectionsApp.Controllers
         private bool ContainsCollectionFieldTitlesDuplicates(CollectionField[] collectionFields)
         {
             var fieldTitlesList = new List<string>(
-                            new string[] { "Title", "Theme", "Description", "Size" }
+                            new string[] { "Title", "Tags" }
                         );
             foreach (var collectionField in collectionFields)
             {
                 fieldTitlesList.Add(collectionField.Title);
             }
             fieldTitlesList.RemoveAll(s => s == null);
-            return fieldTitlesList.Distinct().Count() != fieldTitlesList.Count;
-        }
-
-        
-        private Collection MakeCollection(string collectionsOwnerId, CreateCollectionViewModel model, CollectionField[] collectionFields)
-        {
-            var collectionFieldsList = new List<CollectionField>(collectionFields);
-            collectionFieldsList.RemoveAll(s => s.Title == null);
-            string jsonCollectionFieldsList = JsonSerializer.Serialize(collectionFieldsList.ToArray());
-            var collection = new Collection
+            bool containDuplicates = fieldTitlesList.Distinct().Count() != fieldTitlesList.Count;
+            if (containDuplicates)
             {
-                UserId = collectionsOwnerId,
-                Title = model.Title,
-                Description = model.Description,
-                Theme = model.Theme,
-                ImageUrl = model.ImageUrl,
-                AdditionalFields = jsonCollectionFieldsList
-            };
-            return collection;
+                ModelState.AddModelError(string.Empty, "Collection field titles can't contain duplicates.");
+            }
+            return containDuplicates;
         }
 
+        private void EditColletionFieldValues(Collection collectionToEdit, EditCollectionViewModel model)
+        {
+            collectionToEdit.Title = model.Title;
+            collectionToEdit.Theme = model.Theme;
+            collectionToEdit.Description = model.Description;
+            collectionToEdit.ImageUrl = model.ImageUrl;
+        }
     }
 }

@@ -1,3 +1,65 @@
-﻿
+﻿@model CollectionsApp.ViewModels.EditItemViewModel
 
+<div class="form-group">
+    <h1 class="h1 text-primary">Edit item</h1>
 
+    <form method="post" asp-controller="Items" asp-action="EditItem" asp-route-itemId="@Model.ItemId">
+        <div asp-validation-summary="All"></div>
+
+        <div>
+            <label asp-for="Title"></label><br />
+            <input asp-for="Title" />
+            <br />
+        </div>
+
+        <div>
+            <label>Tags</label><br />
+            @for (int i = 0; i < 3; i++)
+            {
+                <label>
+                    #
+                    <input type="text" name="tags[@i]" value="@Model.Tags[i]" />
+                </label>
+                <br />
+            }
+            <br />
+        </div>
+
+        @{
+            int index = 0;
+        }
+        @foreach (var field in Model.ItemFields)
+        {
+            <input type="hidden" name="itemFields[@index].Title" value="@field.Title" />
+            <input type="hidden" name="itemFields[@index].InputType" value="@field.InputType" />
+            @if (field.InputType.Equals("checkbox"))
+            {
+                <input type="checkbox" name="itemFields[@index].Value" id="@field.Title" value="@field.Value" />
+                <label for="@field.Title">@field.Title</label><br />
+            }
+            else
+            {
+                <label for="@field.Title">@field.Title</label><br />
+                @if (field.InputType.Equals("textarea"))
+                {
+                    <textarea name="itemFields[@index].Value" id="@field.Title" value="@field.Value"></textarea>
+                }
+                else if (field.InputType.Equals("text"))
+                {
+                    <input type="text" name="itemFields[@index].Value" id="@field.Title" value="@field.Value" maxlength="256" />
+                }
+                else
+                {
+                    <input type="@field.InputType" name="itemFields[@index].Value" id="@field.Title" value="@field.Value" />
+
+                }
+                <br /><br />
+            }
+            index++;
+        }
+
+        <div>
+            <input type="submit" class="btn btn-primary" value="Save changes" />
+        </div>
+    </form>
+</div>

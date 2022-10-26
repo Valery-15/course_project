@@ -107,15 +107,18 @@ namespace CoollectionsApp.Controllers
         [HttpGet]
         public async Task<IActionResult> DeleteUser(string userId)
         {
+            if (userId.Equals(_userManager.GetUserId(this.User))){
+                await _signInManager.SignOutAsync();
+            }
             IdentityUser user = await _userManager.FindByIdAsync(userId);
             if (user != null)
             {
                 var result = await _userManager.DeleteAsync(user);
-                var currentUser = await _userManager.GetUserAsync(this.User);
-                if (currentUser == null)
-                {
-                    return RedirectToAction("Index", "Home");
-                }
+                //var currentUser = await _userManager.GetUserAsync(this.User);
+                //if (currentUser == null)
+                //{
+                //    return RedirectToAction("Index", "Home");
+                //}
             }
             return RedirectToAction("UsersList");
         }

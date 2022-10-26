@@ -17,5 +17,15 @@ namespace CollectionsApp.Models
 
         public virtual Item Item { get; set; }
         public virtual IdentityUser User { get; set; }
+
+        public Comment(){}
+
+        public Comment(string userId, int itemId, string body)
+        {
+            UserId = userId;
+            ItemId = itemId;
+            Body = body;
+            AddDate = DateTime.UtcNow;
+        }
     }
 }

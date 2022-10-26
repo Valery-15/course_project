@@ -1,20 +1,27 @@
 ﻿@model CollectionsApp.ViewModels.CreateItemViewModel
 
 <div class="form-group">
-    <h1 class="h1 text-primary">Create item</h1>
+    <h1 class="h2 text-primary">Create item for collection "@ViewBag.collection.Title"</h1>
 
-    <form method="post" asp-controller="Items" asp-action="CreateItem" asp-route-collectionId="@ViewBag.collectionId">
+    <form method="post" asp-controller="Items" asp-action="CreateItem" asp-route-collectionId="@ViewBag.collection.Id">
         <div asp-validation-summary="All"></div>
 
         <div>
             <label asp-for="Title"></label><br />
             <input asp-for="Title" />
-            <br />
+            <br /><br />
         </div>
 
         <div>
-            <label asp-for="Tags"></label><br />
-            <textarea asp-for="Tags"></textarea>
+            <label>Tags</label><br />
+            @for (int i = 0; i < 3; i++)
+            {
+                <div>
+                    <label>#</label>
+                    <input type="text" name="tags[@i]" style="width: 8rem" class="typeahead tt-query" autocomplete="off" spellcheck="false"/ >
+                </div>
+                <br />
+            }
             <br />
         </div>
 
@@ -44,16 +51,42 @@
                 else
                 {
                     <input type="@field.InputType" name="itemFields[@index].Value" id="@field.Title" />
-
                 }
+                <br /><br />
             }
+            index++;
         }
 
         <div>
-            <br /><input type="submit" class="btn btn-primary" value="Create" /><br />
+            <input type="submit" class="btn btn-primary" value="Create" />
         </div>
     </form>
 </div>
+
+<script>
+    $(document).ready(function () {
+        // Constructing the suggestion engine
+        var tags = new Bloodhound({
+            datumTokenizer: Bloodhound.tokenizers.whitespace,
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            prefetch: '/Tags/GetTagsList'
+        });
+
+        // Initializing the typeahead
+        $('.typeahead').typeahead({
+            hint: true,
+            highlight: true, /* Enable substring highlighting */
+            minLength: 1 /* Specify minimum characters required for showing result */
+        },
+        {
+            name: 'tags',
+            limit: 5,
+            source: tags
+        });
+    });
+
+
+</script>
 
 @*@foreach (var field in Model.Fields)
     {

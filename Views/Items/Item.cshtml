@@ -1,45 +1,155 @@
 ﻿@model CollectionsApp.ViewModels.ItemViewModel
 
+@using Microsoft.AspNetCore.Identity
+@using CollectionsApp.Models
+@using Microsoft.AspNetCore.Mvc;
+@inject SignInManager<IdentityUser> SignInManager
+@inject UserManager<IdentityUser> UserManager
+
 <div>
-    <label>Collection: @Model.CollectionTitle</label>
+    <div>
+        <a class="h2 text-primary" href="/Items/ItemsList?collectionId=@Model.CollectionId">
+            @Model.CollectionTitle
+        </a><br/><br />
+    </div>
 
     <div class="card" style="width: 18rem;">
         <div class="card-header">
-            @Model.Title
+            <label class="h3 text-info font-italic">@Model.Title</label>
         </div>
         <ul class="list-group list-group-flush">
             @foreach (var field in Model.AdditionalFields)
             {
                 <li class="list-group-item">@field.Title: @field.Value</li>
             }
+            <li class="list-group-item align-content-end">
+                <button id="like" style="border:none; background:none;outline:none"></button>
+                <label id="likesNumber"></label>
+            </li>
         </ul>
-    </div>
+    </div><br />
 
-    <div>
-        <button>
-            @if (Model.isCurrentUserLikedItem)
-            {
-                <i class="bi bi-heart-fill"></i>
-            }
-            else
-            {
-                <i class="bi bi-heart"></i>
-            }
-        </button>
-        <label>@Model.LikesNumber</label>
-    </div>
 
-    <div>
-        @foreach (var comment in Model.Comments)
-        {
-            <div class="card" style="width: 18rem;">
-                <div class="card-header">
-                    @comment.User.UserName
-                </div>
-                <div class="card-body">
-                    @comment.Body
-                </div>
-            </div>
-        }
+    @if (SignInManager.IsSignedIn(this.User))
+    {
+        <div>
+            <form method="post" asp-controller="Comments" asp-action="AddComment">
+                <input type="hidden" name="itemId" value="@Model.ItemId" />
+                <textarea name="body" style="width: 18rem" placeholder="Your comment" required></textarea><br/>
+                <input type="submit" class="btn btn-primary" value="Send" />
+            </form>
+        </div>
+    }
+
+    <br />
+    <div class="card" style="width: 18rem;">
+        <div class="card-header">
+            <label class="h4 text-dark" style="font-weight:500">Comments</label>
+        </div>
+        <div class="card-body">
+            <table id="comments">
+                <thead>
+                    <tr>
+                        <th></th>
+                        <th></th>
+                    </tr>
+                </thead>
+                <tbody>
+                </tbody>
+            </table>
+        </div>
     </div>
 </div>
+
+<script>
+    var comments = document.getElementById('comments');
+    updateComments();
+
+    function updateComments() {
+        var url = '/Comments/GetCommentsList?itemId=@Model.ItemId';
+        fetch(url)
+            .then(result => result.json())
+            .then(commentsList => {
+                clearTable(comments, 1);
+
+                commentsList.forEach(comment => {
+                    var tr = document.createElement('tr');
+                    var td;
+
+                    td = document.createElement('td');
+                    td.innerHTML = comment.user.userName + ':  ';
+                    td.style = "font-weight:500";
+                    tr.appendChild(td);
+
+                    td = document.createElement('td');
+                    td.innerHTML = comment.body;
+                    tr.appendChild(td);
+
+                    comments.append(tr);
+                });
+                setTimeout(updateComments, 5000);
+            })
+            .catch(e => {
+                console.log('Error: ', e);
+                setTimeout(updateComments, 5000);
+            });
+    }
+
+    function clearTable(table, offset = 0) {
+        if (table.rows != null) {
+            let rowCount = table.rows.length;
+            for (var i = offset; i < rowCount; i++) {
+                table.deleteRow(offset);
+            }
+        }
+    }
+</script>
+
+<script>
+    var like = document.getElementById('like');
+    var likesNumber = document.getElementById('likesNumber');
+    var isSignedIn = '@SignInManager.IsSignedIn(this.User)';
+    var isUserLikedItem;
+    var url;
+    fetch('/Likes/ShowLikes?itemId=@Model.ItemId')
+            .then(result => result.json())
+            .then(data => {
+                console.log(data);
+                if (data.isCurrentUserLikedItem) {
+                    isUserLikedItem = true;
+                    url = '/Likes/RemoveLike?itemId=@Model.ItemId';
+                    like.className = "bi bi-heart-fill";
+                    console.log('remove like');
+                } else {
+                    isUserLikedItem = false;
+                    url = '/Likes/AddLike?itemId=@Model.ItemId';
+                    like.className = "bi bi-heart";
+                    console.log('add like');
+                }
+                likesNumber.innerHTML = data.likesNumber;
+            });
+
+    if (isSignedIn.toLowerCase() == "true") {
+        like.addEventListener("click", function () {
+            fetch(url)
+                .then(response => response.json())
+                .then((data) => {
+                    console.log(data);
+                    if (data.isCurrentUserLikedItem) {
+                        isUserLikedItem = true;
+                        url = '/Likes/RemoveLike?itemId=@Model.ItemId';
+                        like.className = "bi bi-heart-fill";
+                        console.log('removw like');
+                    } else {
+                        isUserLikedItem = false;
+                        url = '/Likes/AddLike?itemId=@Model.ItemId';
+                        like.className = "bi bi-heart";
+                        console.log('add like');
+
+                    }
+                    likesNumber.innerHTML = data.likesNumber;
+                    });
+        });
+    }
+</script>
+

@@ -55,27 +55,16 @@ namespace CollectionsApp.Controllers
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user != null)
             {
-                if(!await _userManager.IsInRoleAsync(user, "active user"))
-                {
-                    return RedirectToAction("AccessDenied");
-                }
-                var result =
-                    await _signInManager.PasswordSignInAsync(user, model.Password, false, false);
-                if (result.Succeeded)
-                {
-                    return RedirectToAction("CollectionsList", "Collections", new {collectionsOwnerId = user.Id});
-                }
-                else
-                {
-                    ModelState.AddModelError(string.Empty, "Invalid email or password.");
-                }
-            } else
+                return await SignInActiveUserIfPasswordIsCorrect(user, model);
+            }
+            else
             {
                 ModelState.AddModelError(string.Empty, "User with such an email doesn't exist.");
+                return View(model);
             }
-            return View(model);
         }
 
+        [Authorize]
         [HttpPost]
         public async Task<IActionResult> Logout()
         {
@@ -86,11 +75,30 @@ namespace CollectionsApp.Controllers
         [HttpGet]
         public IActionResult AccessDenied() => View();
 
-        private void AddModelErrors(IEnumerable<IdentityError> errors, ModelStateDictionary modelState)
+        private void AddModelErrors(IEnumerable<IdentityError> errors, 
+            ModelStateDictionary modelState)
         {
             foreach (var error in errors)
             {
                 modelState.AddModelError(string.Empty, error.Description);
+            }
+        }
+
+        private async Task<IActionResult> SignInActiveUserIfPasswordIsCorrect(IdentityUser user, LoginViewModel model)
+        {
+            if (!await _userManager.IsInRoleAsync(user, "active user"))
+            {
+                return RedirectToAction("AccessDenied");
+            }
+            var result = await _signInManager.PasswordSignInAsync(user, model.Password, false, false);
+            if (result.Succeeded)
+            {
+                return RedirectToAction("CollectionsList", "Collections", new { collectionsOwnerId = user.Id });
+            }
+            else
+            {
+                ModelState.AddModelError(string.Empty, "Invalid password.");
+                return View(model);
             }
         }
     }

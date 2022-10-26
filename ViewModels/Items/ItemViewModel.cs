@@ -17,12 +17,13 @@ namespace CollectionsApp.ViewModels
             Comments = new List<Comment>();
         }
 
-        public ItemViewModel(Item item, string currentUserId)
+        public ItemViewModel(Item item, string currentUserId, ApplicationContext db)
         {
-            using ApplicationContext db = new ApplicationContext(BuildOptions());
+            CollectionId = item.CollectionId;
             CollectionTitle = db.Collections.Find(item.CollectionId).Title;
+            ItemId = item.Id;
             Title = item.Title;
-            Tags = item.Tags;
+            //Tags = item.Tags;
             LikesNumber = item.LikesNumber;
             if (currentUserId != null)
             {
@@ -36,21 +37,11 @@ namespace CollectionsApp.ViewModels
                 isCurrentUserLikedItem = false;
             }
             AdditionalFields = new List<ItemField>(JsonSerializer.Deserialize<ItemField[]>(item.AdditionalFields));
-            Comments = new List<Comment>(db.Comments.Where(comment => comment.ItemId == item.Id));
+            Comments = new List<Comment>(db.Comments.Where(comment => comment.ItemId == item.Id).Include(comment => comment.User));
         }
 
-        private DbContextOptions<ApplicationContext> BuildOptions()
-        {
-            var builder = new ConfigurationBuilder();
-            builder.AddJsonFile("appsettings.json");
-            var configuration = builder.Build();
-            string ConnectionString = configuration.GetConnectionString("DefaultConnection");
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationContext>();
-            return optionsBuilder
-                    .UseSqlServer(ConnectionString)
-                    .Options;
-        }
-
+        public int CollectionId { get; set; }
+        public int ItemId { get; set; }
         public string CollectionTitle { get; set; }
         public string Title { get; set; }
         public string Tags { get; set; }

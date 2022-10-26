@@ -18,46 +18,37 @@ namespace CollectionsApp.Controllers
     public class ItemsController : Controller
     {
         private readonly UserManager<IdentityUser> _userManager;
-        private readonly DbContextOptions<ApplicationContext> _options;
+        private readonly ApplicationContext _db;
 
-        public ItemsController(UserManager<IdentityUser> userManager)
+        public ItemsController(UserManager<IdentityUser> userManager,
+            ApplicationContext db)
         {
-            this._userManager = userManager;
-            this._options = BuildOptions();
+            _userManager = userManager;
+            _db = db;
         }
 
-        private DbContextOptions<ApplicationContext> BuildOptions()
-        {
-            var builder = new ConfigurationBuilder();
-            builder.AddJsonFile("appsettings.json");
-            var configuration = builder.Build();
-            string ConnectionString = configuration.GetConnectionString("DefaultConnection");
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationContext>();
-            return optionsBuilder
-                    .UseSqlServer(ConnectionString)
-                    .Options;
-        }
-
+        [AllowAnonymous]
+        [HttpGet]
         public IActionResult ItemsList(int collectionId)
         {
-            ViewBag.collectionId = collectionId;
+            ViewBag.collection = _db.Collections.Find(collectionId);
+            _db.Entry(ViewBag.collection).Reference("User").Load();
             return View();
         }
 
+        [AllowAnonymous]
         public async Task<IActionResult> Item(int itemId)
         {
-            using ApplicationContext db = new ApplicationContext(this._options);
-            Item item = await db.Items.FindAsync(itemId);
+            Item item = await _db.Items.FindAsync(itemId);
             var currentUserId = _userManager.GetUserId(this.User);
-            var model = new ItemViewModel(item, currentUserId);
+            var model = new ItemViewModel(item, currentUserId, _db);
             return View(model);
         }
 
         [HttpGet]
         public IActionResult CreateItem(int collectionId)
         {
-            ApplicationContext db = new ApplicationContext(this._options);
-            Collection collection = db.Collections.Find(collectionId);
+            Collection collection = _db.Collections.Find(collectionId);
             CollectionField[] collectionFields = { };
             if (collection != null)
             {
@@ -73,136 +64,124 @@ namespace CollectionsApp.Controllers
                 itemFields.Add(new ItemField(collectionField));
             }
             model.ItemFields = itemFields;
-            ViewBag.collectionId = collectionId;
+            ViewBag.collection = collection;
             return View(model);
         }
 
         [HttpPost]
-        public IActionResult CreateItem(int collectionId, CreateItemViewModel model, ItemField[] itemFields)
+        public IActionResult CreateItem(int collectionId, CreateItemViewModel model, 
+            ItemField[] itemFields, string[] tags)
         {
             if (!ModelState.IsValid)
             {
                 //установить значения
-                ViewBag.collectionId = collectionId;
+                ViewBag.collection = _db.Collections.Find(collectionId);
                 return View(model);
             }
-            ApplicationContext db = new ApplicationContext(this._options);
-            Collection collection = db.Collections.Find(collectionId);
+            Collection collection = _db.Collections.Find(collectionId);
             if (collection != null)
             {
 
                 Item itemToAdd = new Item();
                 itemToAdd.Title = model.Title;
-                itemToAdd.Tags = model.Tags;
+                //itemToAdd.Tags = model.Tags;
                 itemToAdd.AddDate = DateTime.Now;
                 itemToAdd.CollectionId = collectionId;
                 itemToAdd.AdditionalFields = JsonSerializer.Serialize(itemFields);
+                itemToAdd.Author = _userManager.GetUserName(this.User);
+
+                _db.Items.Add(itemToAdd);
+                _db.SaveChanges();
 
 
-                db.Items.Add(itemToAdd);
-                db.SaveChanges();
-                return RedirectToAction("ItemsList", new { collectionId = collectionId});
+                List<string> tagsList = new List<string>(tags);
+                tagsList.RemoveAll(tagValue => tagValue == null);
+                
+
+                foreach (var tag in tagsList)
+                {
+                    Tag tagToAdd;
+                    if (_db.Tags.Where(t => t.TagValue.Equals(tag)).Count() == 0)
+                    {
+                        tagToAdd = new Tag { TagValue = tag };
+                        _db.Tags.Add(tagToAdd);
+                        _db.SaveChanges();
+                    } else
+                    {
+                        tagToAdd = _db.Tags.Where(t => t.TagValue.Equals(tag)).First();
+                    }
+                    _db.ItemTags.Add(new ItemTag { ItemId = itemToAdd.Id, TagId = tagToAdd.Id });
+                    _db.SaveChanges();
+                }
             }
-            ViewBag.collectionId = collectionId;
+            return RedirectToAction("ItemsList", new { collectionId = collectionId });
+        }
+
+        [HttpGet]
+        public IActionResult EditItem(int itemId)
+        {
+            Item itemToEdit = _db.Items.Find(itemId);
+            List<ItemField> itemFields = new List<ItemField>(JsonSerializer.Deserialize<ItemField[]>(itemToEdit.AdditionalFields));
+            EditItemViewModel model = new EditItemViewModel();
+            model.Title = itemToEdit.Title;
+            //model.Tags = _db.ItemTags.Where(itemtag => itemtag.ItemId == itemId);
+            model.ItemFields = itemFields;
+            model.CollectionId = itemToEdit.CollectionId;
+            model.ItemId = itemId;
             return View(model);
         }
 
-        [HttpGet]
-        public IActionResult EditItem(int collectionId, int itemId)
+        [HttpPost]
+        public IActionResult EditItem(EditItemViewModel model, ItemField[] itemFields)
         {
-            CreateItemViewModel model = new CreateItemViewModel();
-            ApplicationContext db = new ApplicationContext(this._options);
-            Collection collection = db.Collections.Find(collectionId);
-            Item item = db.Items.Find(itemId);
-            List<ItemField> list = new List<ItemField>();
-            //list.Add(new ItemField { Title = collection.IntegerField1, Type = "number", Value = item.IntegerField1.ToString() });
-            //list.Add(new ItemField { Title = collection.IntegerField2, Type = "number", Value = item.IntegerField2.ToString() });
-            //list.Add(new ItemField { Title = collection.IntegerField3, Type = "number", Value = item.IntegerField3.ToString() });
-            ViewBag.collectionId = collectionId;
-            return View(model);
-        }
+            if (!ModelState.IsValid) return View(model);
 
-
-        [HttpGet]
-        public IActionResult AddLike(string userId, int itemId, string returnUrl)
-        {
-            ApplicationContext db = new ApplicationContext(this._options);
-            Like like = new Like { UserId = userId, ItemId = itemId };
-            db.Likes.Add(like);
-            db.SaveChanges();
-            return Redirect(returnUrl);
-        }
-
-        [HttpGet]
-        public IActionResult RemoveLike(int likeId, string returnUrl)
-        {
-            ApplicationContext db = new ApplicationContext(this._options);
-            Like likeToRemove = db.Likes.Find(likeId);
-            if (likeToRemove != null)
+            Item itemToEdit = _db.Items.Find(model.ItemId);
+            if (itemToEdit != null)
             {
-                db.Likes.Remove(likeToRemove);
-                db.SaveChanges();
+                itemToEdit.Title = model.Title;
+                //itemToEdit.Tags = model.Tags;
+                itemToEdit.AdditionalFields = JsonSerializer.Serialize<ItemField[]>(itemFields);
+                _db.Items.Update(itemToEdit);
+                _db.SaveChanges();
+                
             }
-            return Redirect(returnUrl);
+            return RedirectToAction("Item", new { itemId = model.ItemId });
         }
-
-
 
         [HttpGet]
         public IActionResult DeleteItem(int itemId)
         {
-            ApplicationContext db = new ApplicationContext(_options);
-            Item itemToDelete = db.Items.Find(itemId);
+            Item itemToDelete = _db.Items.Find(itemId);
             if (itemToDelete != null)
             {
-                db.Items.Remove(itemToDelete);
-                db.SaveChanges();
+                _db.Items.Remove(itemToDelete);
+                _db.SaveChanges();
             }
             return RedirectToAction("ItemsList",new { collectionId = itemToDelete.CollectionId });
         }
 
+        [AllowAnonymous]
         [HttpGet]
         public JsonResult GetItemsList(int collectionId)
         {
-            ApplicationContext db = new ApplicationContext(this._options);
-            var collectionItems = db.Items.Where(item => item.CollectionId.Equals(collectionId)).ToList();
-            return Json(collectionItems);
-        }
+            var collectionItems = _db.Items.Where(item => item.CollectionId.Equals(collectionId)).ToList();
+            var itemsList = new List<ItemTableViewModel>();
+            foreach(var item in collectionItems)
+            {
+                var itemtagsList = _db.ItemTags.Where(itemtag => itemtag.ItemId == item.Id).ToList();
+                var tagsList = new List<Tag>();
+                foreach(var itemtag in itemtagsList)
+                {
+                    tagsList.Add(_db.Tags.Find(itemtag.TagId));
+                }
+                itemsList.Add(new ItemTableViewModel { 
+                    Id = item.Id, 
+                    Title = item.Title, 
+                    JsonTags = JsonSerializer.Serialize(tagsList) });
+            }
+            return Json(itemsList);
 
-
-
-        private Item MakeItem(Collection collection, HttpRequest request)
-        {
-            Item item = new Item();
-            //try
-            //{
-            //    item.IntegerField1 = Int32.Parse(request.Form.FirstOrDefault(p => p.Key.Equals(collection.IntegerField1)).Value);
-            //    item.IntegerField2 = Int32.Parse(request.Form.FirstOrDefault(p => p.Key.Equals(collection.IntegerField2)).Value);
-            //    item.IntegerField3 = Int32.Parse(request.Form.FirstOrDefault(p => p.Key.Equals(collection.IntegerField3)).Value);
-
-            //    item.StringField1 = request.Form.FirstOrDefault(p => p.Key.Equals(collection.StringField1)).Value;
-            //    item.StringField2 = request.Form.FirstOrDefault(p => p.Key.Equals(collection.StringField2)).Value;
-            //    item.StringField3 = request.Form.FirstOrDefault(p => p.Key.Equals(collection.StringField3)).Value;
-
-            //    item.MultiStringField1 = request.Form.FirstOrDefault(p => p.Key.Equals(collection.MultiStringField1)).Value;
-            //    item.MultiStringField2 = request.Form.FirstOrDefault(p => p.Key.Equals(collection.MultiStringField2)).Value;
-            //    item.MultiStringField3 = request.Form.FirstOrDefault(p => p.Key.Equals(collection.MultiStringField3)).Value;
-
-            //    item.BoolField1 = Boolean.Parse(request.Form.FirstOrDefault(p => p.Key.Equals(collection.BoolField1)).Value);
-            //    item.BoolField2 = Boolean.Parse(request.Form.FirstOrDefault(p => p.Key.Equals(collection.BoolField2)).Value);
-            //    item.BoolField3 = Boolean.Parse(request.Form.FirstOrDefault(p => p.Key.Equals(collection.BoolField3)).Value);
-
-            //    item.DateField1 = DateTime.Parse(request.Form.FirstOrDefault(p => p.Key.Equals(collection.DateField1)).Value);
-            //    item.DateField2 = DateTime.Parse(request.Form.FirstOrDefault(p => p.Key.Equals(collection.DateField2)).Value);
-            //    item.DateField3 = DateTime.Parse(request.Form.FirstOrDefault(p => p.Key.Equals(collection.DateField3)).Value);
-            //} catch(FormatException)
-            //{
-
-            //} catch(ArgumentNullException)
-            //{
-
-            //}
-            return item;
         }
     }
 }
