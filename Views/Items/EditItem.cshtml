@@ -18,7 +18,14 @@
             {
                 <label>
                     #
-                    <input type="text" name="tags[@i]" value="@Model.Tags[i]" />
+                    @if (i < Model.Tags.Count())
+                    {
+                        <input type="text" name="tags[@i].TagValue" value="@Model.Tags[i].TagValue" style="width: 8rem" class="typeahead tt-query" autocomplete="off" spellcheck="false"/>
+                    } else
+                    {
+                        <input type="text" name="tags[@i].TagValue" style="width: 8rem" class="typeahead tt-query" autocomplete="off" spellcheck="false" />
+                    }
+
                 </label>
                 <br />
             }
@@ -63,3 +70,26 @@
         </div>
     </form>
 </div>
+
+<script>
+    $(document).ready(function () {
+        // Constructing the suggestion engine
+        var tags = new Bloodhound({
+            datumTokenizer: Bloodhound.tokenizers.whitespace,
+            queryTokenizer: Bloodhound.tokenizers.whitespace,
+            prefetch: '/Tags/GetTagsList'
+        });
+
+        // Initializing the typeahead
+        $('.typeahead').typeahead({
+            hint: true,
+            highlight: true, /* Enable substring highlighting */
+            minLength: 1 /* Specify minimum characters required for showing result */
+        },
+        {
+            name: 'tags',
+            limit: 5,
+            source: tags
+        });
+    });
+</script>

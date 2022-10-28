@@ -11,19 +11,29 @@ namespace CollectionsApp.ViewModels
 {
     public class ItemViewModel
     {
+        public int CollectionId { get; set; }
+        public int ItemId { get; set; }
+        public string CollectionTitle { get; set; }
+        public string Title { get; set; }
+        public int LikesNumber { get; set; }
+        public bool isCurrentUserLikedItem { get; set; }
+        public List<ItemField> AdditionalFields { get; set; }
+        public List<Comment> Comments { get; set; }
+        public List<Tag> Tags { get; set; }
+
         public ItemViewModel()
         {
             AdditionalFields = new List<ItemField>();
             Comments = new List<Comment>();
         }
 
-        public ItemViewModel(Item item, string currentUserId, ApplicationContext db)
+        public ItemViewModel(Item item, List<Tag> tags, string currentUserId, ApplicationContext db)
         {
             CollectionId = item.CollectionId;
             CollectionTitle = db.Collections.Find(item.CollectionId).Title;
             ItemId = item.Id;
             Title = item.Title;
-            //Tags = item.Tags;
+            Tags = tags;
             LikesNumber = item.LikesNumber;
             if (currentUserId != null)
             {
@@ -31,7 +41,7 @@ namespace CollectionsApp.ViewModels
                 like.ItemId = item.Id;
                 like.UserId = currentUserId;
                 isCurrentUserLikedItem = db.Likes.Contains<Like>(like);
-            } 
+            }
             else
             {
                 isCurrentUserLikedItem = false;
@@ -40,14 +50,5 @@ namespace CollectionsApp.ViewModels
             Comments = new List<Comment>(db.Comments.Where(comment => comment.ItemId == item.Id).Include(comment => comment.User));
         }
 
-        public int CollectionId { get; set; }
-        public int ItemId { get; set; }
-        public string CollectionTitle { get; set; }
-        public string Title { get; set; }
-        public string Tags { get; set; }
-        public int LikesNumber { get; set; }
-        public bool isCurrentUserLikedItem { get; set; }
-        public List<ItemField> AdditionalFields { get; set; }
-        public List<Comment> Comments { get; set; }
     }
 }

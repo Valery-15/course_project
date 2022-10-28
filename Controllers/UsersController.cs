@@ -19,26 +19,17 @@ namespace CoollectionsApp.Controllers
     {
         private readonly UserManager<IdentityUser> _userManager;
         private readonly SignInManager<IdentityUser> _signInManager;
-        private readonly DbContextOptions<ApplicationContext> _options;
+        private readonly ApplicationContext _db;
 
         public UsersController(UserManager<IdentityUser> userManager,
-            SignInManager<IdentityUser> signInManager)
+            SignInManager<IdentityUser> signInManager, ApplicationContext db)
         {
             _userManager = userManager;
             _signInManager = signInManager;
-            _options = BuildOptions();
+            _db = db;
         }
 
-        private DbContextOptions<ApplicationContext> BuildOptions()
-        {
-            var builder = new ConfigurationBuilder();
-            builder.AddJsonFile("appsettings.json");
-            var config = builder.Build();
-            string ConnectionString = config.GetConnectionString("DefaultConnection");
-            var optionsBuilder = new DbContextOptionsBuilder<ApplicationContext>();
-            return optionsBuilder.UseSqlServer(ConnectionString).Options;
-        }
-
+        [HttpGet]
         public IActionResult UsersList() => View();
 
         [HttpGet]
@@ -149,8 +140,7 @@ namespace CoollectionsApp.Controllers
         [HttpGet]
         public async Task<JsonResult> GetUsersList()
         {
-            using ApplicationContext db = new ApplicationContext(_options);
-            var usersTableList = db.Users.ToList();
+            var usersTableList = _db.Users.ToList();
             var usersList = new List<UsersTableViewModel>();
             foreach(var user in usersTableList)
             {

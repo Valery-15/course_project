@@ -7,37 +7,43 @@
 
     <div>
         <div>
-            <label class="h3 text-primary">Found items</label>
-        </div>
-        <div>
-            @foreach (var item in Model.Items)
-            {
-                <div class="col-sm-3">
-                    <div class="card mb-4 rounded-3 shadow-sm">
-                        <div class="card-header py-3">
-                            <a class="my-0 fw-normal h4 text-info font-italic" href="/Items/Item?itemId=@item.Id">@item.Title</a>
+            <label class="h3">Found items</label>
+            <ul>
+                @foreach (var item in Model.Items)
+                {
+                    <li>
+                        <a href="/Items/Item?itemId=@item.Id">@item.Title</a>
+                    </li>
+                    @*<div class="col-sm-3">
+                        <div class="card mb-4 rounded-3 shadow-sm">
+                            <div class="card-header py-3">
+                                <a class="my-0 fw-normal h4 text-info font-italic" href="/Items/Item?itemId=@item.Id">@item.Title</a>
+                            </div>
                         </div>
-                    </div>
-                </div>
-            }
+                    </div>*@
+                }
+            </ul>
         </div>
     </div>
 
     <div>
         <div>
-            <label class="h3 text-primary">Found collections</label>
-        </div>
-        <div>
-            @foreach (var collection in Model.Collections)
-            {
-                <div class="col-3">
-                    <div class="card mb-4 rounded-3 shadow-sm">
-                        <div class="card-header py-3">
-                            <a href="/Items/ItemsList?collectionId=@collection.Id" class="my-0 fw-normal h4 text-danger">@collection.Title</a>
-                        </div>
+            <label>Found collections</label>
+            <ul>
+                @foreach (var collection in Model.Collections)
+                {
+                <li>
+                    <a href="/Items/ItemsList?collectionId=@collection.Id">@collection.Title</a>
+                </li>
+                    @*<div class="col-3">
+                <div class="card mb-4 rounded-3 shadow-sm">
+                    <div class="card-header py-3">
+                        <a href="/Items/ItemsList?collectionId=@collection.Id" class="my-0 fw-normal h4 text-danger">@collection.Title</a>
                     </div>
                 </div>
-            }
+            </div>*@
+                }
+            </ul>
         </div>
     </div>
 </div>

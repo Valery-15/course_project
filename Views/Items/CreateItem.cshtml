@@ -16,10 +16,18 @@
             <label>Tags</label><br />
             @for (int i = 0; i < 3; i++)
             {
-                <div>
-                    <label>#</label>
-                    <input type="text" name="tags[@i]" style="width: 8rem" class="typeahead tt-query" autocomplete="off" spellcheck="false"/ >
-                </div>
+                <label>
+                    #
+                    @if (i < Model.Tags.Count())
+                    {
+                        <input type="text" name="tags[@i].TagValue" value="@Model.Tags[i].TagValue" style="width: 8rem" class="typeahead tt-query" autocomplete="off" spellcheck="false" />
+                    }
+                    else
+                    {
+                        <input type="text" name="tags[@i].TagValue" style="width: 8rem" class="typeahead tt-query" autocomplete="off" spellcheck="false" />
+                    }
+
+                </label>
                 <br />
             }
             <br />
@@ -34,7 +42,7 @@
             <input type="hidden" name="itemFields[@index].InputType" value="@field.InputType" />
             @if (field.InputType.Equals("checkbox"))
             {
-                <input type="checkbox" name="itemFields[@index].Value" id="@field.Title" />
+                <input type="checkbox" name="itemFields[@index].Value" value="@field.Value" id="@field.Title" />
                 <label for="@field.Title">@field.Title</label><br />
             }
             else
@@ -42,15 +50,15 @@
                 <label for="@field.Title">@field.Title</label><br />
                 @if (field.InputType.Equals("textarea"))
                 {
-                    <textarea name="itemFields[@index].Value" id="@field.Title"></textarea>
+                    <textarea name="itemFields[@index].Value" id="@field.Title" value="@field.Value"></textarea>
                 }
                 else if (field.InputType.Equals("text"))
                 {
-                    <input type="text" name="itemFields[@index].Value" id="@field.Title" maxlength="256" />
+                    <input type="text" name="itemFields[@index].Value" id="@field.Title" value="@field.Value" maxlength="256" />
                 }
                 else
                 {
-                    <input type="@field.InputType" name="itemFields[@index].Value" id="@field.Title" />
+                    <input type="@field.InputType" name="itemFields[@index].Value" id="@field.Title" value="@field.Value" />
                 }
                 <br /><br />
             }
@@ -84,8 +92,6 @@
             source: tags
         });
     });
-
-
 </script>
 
 @*@foreach (var field in Model.Fields)

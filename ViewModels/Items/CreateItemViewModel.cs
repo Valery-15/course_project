@@ -9,15 +9,26 @@ namespace CollectionsApp.ViewModels
 {
     public class CreateItemViewModel
     {
-        public CreateItemViewModel()
-        {
-            ItemFields = new List<ItemField>();
-        }
-
         [Required]
         [MaxLength(50)]
         public string Title { get; set; }
 
-        public IEnumerable<ItemField> ItemFields { get; set; }
+        public List<Tag> Tags { get; set; }
+
+        public List<ItemField> ItemFields { get; set; }
+
+        public CreateItemViewModel()
+        {
+            ItemFields = new List<ItemField>();
+            Tags = new List<Tag>();
+        }
+
+        public CreateItemViewModel(List<ItemField> itemFields)
+        {
+            ItemFields = itemFields;
+            Tags = new List<Tag>();
+        }
+
+
     }
 }

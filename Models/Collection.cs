@@ -34,12 +34,9 @@ namespace CollectionsApp.Models
             Title = model.Title;
             Description = model.Description;
             Theme = model.Theme;
-            ImageUrl = model.ImageUrl;
-            additionalFields.ToList().RemoveAll(s => s.Title == null);
-            AdditionalFields = JsonSerializer.Serialize(additionalFields);
+            List<CollectionField> fields = additionalFields.ToList();
+            fields.RemoveAll(s => s.Title == null);
+            AdditionalFields = JsonSerializer.Serialize(fields);
         }
-
-
-
     }
 }

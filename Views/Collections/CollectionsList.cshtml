@@ -7,6 +7,7 @@
 
 @{
     bool isUserSignedIn = signInManager.IsSignedIn(this.User);
+    bool isCurrentUserActive = this.User.IsInRole("active user");
     string currentUserId = userManager.GetUserId(this.User);
     bool isCurrentUserCollectionsOwner = ViewBag.collectionsOwnerId.Equals(currentUserId);
     bool isCurrentUserAdmin = this.User.IsInRole("admin");
@@ -15,15 +16,16 @@
 }
 
 <div>
-    <nav class="navbar navbar-light bg-success bg-light">
-
+    <nav class="navbar">
         @if (isCurrentUserCollectionsOwner)
         {
             <form class="form-inline">
                 <h1>My Collections</h1>
             </form>
             <form class="form-inline">
-                <a asp-controller="Collections" asp-action="CreateCollection" asp-route-collectionsOwnerId="@ViewBag.collectionsOwnerId" class="btn btn-outline-success"><i class="bi bi-plus-circle"></i></a>
+                <a asp-controller="Collections" asp-action="CreateCollection" asp-route-collectionsOwnerId="@ViewBag.collectionsOwnerId" class="btn btn-outline-success">
+                    <i class="bi bi-plus-circle"></i>
+                </a>
             </form>
         }
         else
@@ -41,7 +43,7 @@
                 <th>Theme</th>
                 <th>Description</th>
                 <th>Size</th>
-                @if (isCurrentUserCollectionsOwner || isCurrentUserAdmin)
+                @if (isCurrentUserActive && (isCurrentUserCollectionsOwner || isCurrentUserAdmin))
                 {
                     <th></th>
                 }
@@ -54,22 +56,22 @@
 
 <script>
     var collectionsOwnerId = '@ViewBag.collectionsOwnerId';
-
-    console.log(collectionsOwnerId);
-
     var collectionsTable = document.getElementById('collectionsTable');
+    var isCurrentUserActive = '@isCurrentUserActive'.toLowerCase() == 'true';
+    var isCurrentUserCollectionsOwner = '@isCurrentUserCollectionsOwner'.toLowerCase() == 'true';
+    var isCurrentUserAdmin = '@isCurrentUserAdmin'.toLowerCase() == 'true';
+
 
     updateCollectionsList();
 
     function updateCollectionsList() {
         var url = '/Collections/GetCollectionsList?userId=' + collectionsOwnerId;
         fetch(url)
-            .then(res => res.json())
+            .then(result => result.json())
             .then(data => {
-                console.log('data: ', data)
                 clearTable(collectionsTable, 1);
 
-                data.forEach((collection) => {
+                data.forEach(collection => {
                     var tr = document.createElement('tr');
                     var td;
 
@@ -94,8 +96,8 @@
                     tr.appendChild(td);
 
 
-                    if ('@isCurrentUserCollectionsOwner'.toLowerCase() == 'true'
-                        || '@isCurrentUserAdmin'.toLowerCase() == ('true')) {
+                    if (isCurrentUserActive &&
+                        (isCurrentUserCollectionsOwner || isCurrentUserAdmin)) {
                         td = document.createElement('td');
                         a = document.createElement('a');
                         var i = document.createElement('i');
@@ -116,18 +118,25 @@
                         tr.appendChild(td);
                     }
 
-
-
-
-
                     collectionsTable.append(tr);
                 });
                 setTimeout(updateCollectionsList, 5000);
             })
             .catch(e => {
-                console.log('Error: ', e);
                 setTimeout(updateCollectionsList, 5000);
             });
+    }
+
+    function createTdWithA() {
+
+    }
+
+    function createTd() {
+
+    }
+
+    function createAWithIcon() {
+
     }
 
     function clearTable(table, offset = 0) {

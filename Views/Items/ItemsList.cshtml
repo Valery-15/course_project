@@ -1,6 +1,7 @@
 ﻿@using Microsoft.AspNetCore.Identity
 @using CollectionsApp.Models
 @using Microsoft.AspNetCore.Mvc;
+@using Markdig
 @inject SignInManager<IdentityUser> signInManager
 @inject UserManager<IdentityUser> userManager
 
@@ -14,9 +15,11 @@
 <div>
     <nav class="navbar">
         <form>
-            <h3 class="text-info">Collection: @ViewBag.collection.Title</h3>
-            <h6>Theme: @ViewBag.collection.Theme</h6>
-            <h6>Owner: @collectionOwner</h6>
+            <label class="h4 text-info">
+                Collection: @ViewBag.collection.Title<br />
+                Theme: @ViewBag.collection.Theme<br />
+                Owner: <a href="/Collections/CollectionsList?collectionsOwnerId=@ViewBag.collection.UserId">@collectionOwner</a>
+            </label>
         </form>
         @if (isUserSignedIn && (isCurrentUserAdmin || isCurrentUserCollectionOwner))
         {
@@ -29,10 +32,10 @@
 
     </nav>
 
-    <table class="table table-responsive table-striped" id="itemsTable">
+    <table class="table table-bordered" id="itemsTable">
         <thead class="thead-dark">
             <tr>
-                <th>Items</th>
+                <th>Item</th>
                 <th>Tags</th>
                 @if (isUserSignedIn && (isCurrentUserAdmin || isCurrentUserCollectionOwner))
                 {
@@ -53,6 +56,8 @@
 
     console.log(collectionId);
     console.log(isUserSignedIn);
+
+    
 
     var itemsTable = document.getElementById('itemsTable');
 

@@ -3,12 +3,9 @@
 <div class="form-group">
     <h1 class="h1 text-primary">Edit collection</h1>
 
-    <form method="post" asp-controller="Collections" asp-action="EditCollection">
+    <form method="post" asp-controller="Collections" asp-action="EditCollection"
+          asp-route-collectionId="@ViewBag.collection.Id" asp-route-collectionOwnerId="@ViewBag.collection.UserId">
         <div asp-validation-summary="All"></div>
-
-        <div>
-            <input type="hidden" name="collectionId" value="@ViewBag.CollectionId" />
-        </div>
 
         <div>
             <label asp-for="Title"></label><br />

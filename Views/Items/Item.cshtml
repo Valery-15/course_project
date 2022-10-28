@@ -1,8 +1,6 @@
 ﻿@model CollectionsApp.ViewModels.ItemViewModel
 
 @using Microsoft.AspNetCore.Identity
-@using CollectionsApp.Models
-@using Microsoft.AspNetCore.Mvc;
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
@@ -15,15 +13,38 @@
 
     <div class="card" style="width: 18rem;">
         <div class="card-header">
-            <label class="h3 text-info font-italic">@Model.Title</label>
+            <label class="h3 text-info">@Model.Title</label><br />
+            @if( Model.Tags.Count() != 0)
+            {
+                foreach(var tag in Model.Tags)
+                {
+                    <a asp-action="GetItemsByTag" asp-controller="Tags" asp-route-tagId="@tag.Id">
+                        #@tag.TagValue
+                    </a><br />
+                }
+            }
         </div>
+
         <ul class="list-group list-group-flush">
             @foreach (var field in Model.AdditionalFields)
             {
+                if (field.InputType.ToLower().Equals("checkbox"))
+                {
+                    if (field.Value == null)
+                    {
+                        <li class="list-group-item">@field.Title: no</li>
+                    } else
+                    {
+                        <li class="list-group-item">@field.Title: yes</li>
+                    }
+                } else
+                {
                 <li class="list-group-item">@field.Title: @field.Value</li>
+
+                }
             }
             <li class="list-group-item align-content-end">
-                <button id="like" style="border:none; background:none;outline:none"></button>
+                <button id="like" style="border:none; background:none;outline:none;color:deeppink"></button>
                 <label id="likesNumber"></label>
             </li>
         </ul>
@@ -111,7 +132,10 @@
     var isSignedIn = '@SignInManager.IsSignedIn(this.User)';
     var isUserLikedItem;
     var url;
-    fetch('/Likes/ShowLikes?itemId=@Model.ItemId')
+
+
+    function updateLikes() {
+        fetch('/Likes/ShowLikes?itemId=@Model.ItemId')
             .then(result => result.json())
             .then(data => {
                 console.log(data);
@@ -128,6 +152,10 @@
                 }
                 likesNumber.innerHTML = data.likesNumber;
             });
+        setTimeout(updateLikes, 5000);
+    }
+
+    updateLikes();
 
     if (isSignedIn.toLowerCase() == "true") {
         like.addEventListener("click", function () {
@@ -139,12 +167,12 @@
                         isUserLikedItem = true;
                         url = '/Likes/RemoveLike?itemId=@Model.ItemId';
                         like.className = "bi bi-heart-fill";
-                        console.log('removw like');
+                        console.log('removw like ev list');
                     } else {
                         isUserLikedItem = false;
                         url = '/Likes/AddLike?itemId=@Model.ItemId';
                         like.className = "bi bi-heart";
-                        console.log('add like');
+                        console.log('add like ev list');
 
                     }
                     likesNumber.innerHTML = data.likesNumber;

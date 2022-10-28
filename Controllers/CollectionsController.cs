@@ -10,6 +10,7 @@ using Microsoft.EntityFrameworkCore;
 using Microsoft.Extensions.Configuration;
 using CollectionsApp.ViewModels;
 using Microsoft.AspNetCore.Authorization;
+using Markdig;
 
 namespace CollectionsApp.Controllers
 {
@@ -37,6 +38,7 @@ namespace CollectionsApp.Controllers
         [HttpGet]
         public IActionResult CreateCollection(string collectionsOwnerId)
         {
+            ViewBag.collectionFields = null;
             ViewBag.collectionsOwnerId = collectionsOwnerId;
             return View();
         }
@@ -48,11 +50,10 @@ namespace CollectionsApp.Controllers
             if (ModelState.IsValid & IsCollectionTitleUnique(collectionsOwnerId, model.Title) &
                     !ContainsCollectionFieldTitlesDuplicates(collectionFields) )
             {
-                var collectionToAdd = new Collection(collectionsOwnerId, model, collectionFields);
-                await _db.Collections.AddAsync(collectionToAdd);
-                _db.SaveChanges();
+                await AddCollectionToDb(collectionsOwnerId, model, collectionFields);
                 return RedirectToAction("CollectionsList", new { collectionsOwnerId = collectionsOwnerId });
             }
+            ViewBag.collectionFields = collectionFields;
             ViewBag.collectionsOwnerId = collectionsOwnerId;
             return View(model);
         }
@@ -61,23 +62,22 @@ namespace CollectionsApp.Controllers
         public async Task<IActionResult> EditCollection(int collectionId)
         {
             Collection collectionToEdit = await _db.Collections.FindAsync(collectionId);
-            ViewBag.CollectionId = collectionId;
-            var viewModel = new EditCollectionViewModel { Title = collectionToEdit.Title, Theme = collectionToEdit.Theme, Description = collectionToEdit.Description };
-            return View(viewModel);
+            var model = new EditCollectionViewModel(collectionToEdit);
+            ViewBag.collection = collectionToEdit;
+            return View(model);
         }
 
         [HttpPost]
         public IActionResult EditCollection(int collectionId, EditCollectionViewModel model)
         {
-            if (!ModelState.IsValid) return View(model);
             Collection collectionToEdit = _db.Collections.Find(collectionId);
-            if (collectionToEdit != null)
+            if (ModelState.IsValid & IsEditedCollectionTitleUnique(collectionToEdit.UserId, collectionToEdit.Title, model.Title))
             {
-                EditColletionFieldValues(collectionToEdit, model);
-                _db.Collections.Update(collectionToEdit);
-                _db.SaveChanges();
+                UpdateCollectionInDb(collectionToEdit, model);
+                return RedirectToAction("CollectionsList", new { collectionsOwnerId = collectionToEdit.UserId });
             }
-            return RedirectToAction("CollectionsList", new { collectionsOwnerId = collectionToEdit.UserId });
+            ViewBag.collection = collectionToEdit;
+            return View(model);
         }
 
         [HttpGet]
@@ -97,6 +97,11 @@ namespace CollectionsApp.Controllers
         public JsonResult GetCollectionsList(string userId)
         {
             var userCollections = _db.Collections.Where(c => c.UserId.Equals(userId)).ToList();
+            foreach(var collection in userCollections)
+            {
+                string htmlDescription = Markdown.ToHtml(collection.Description);
+                collection.Description = htmlDescription;
+            }
             return Json(userCollections);
         }
 
@@ -108,11 +113,24 @@ namespace CollectionsApp.Controllers
             {
                 if (collection.Title.Equals(collectionTitle))
                 {
-                    ModelState.AddModelError(string.Empty, "Title \"" + collectionTitle + "\" is already taken.");
+                    ModelState.AddModelError(string.Empty, "Collection title \"" + collectionTitle + "\" is already taken.");
                     return false;
                 }
             }
             return true;
+        }
+
+        
+        private bool IsEditedCollectionTitleUnique(string userId, string previousCollectionTitle, 
+            string newCollectionTitle)
+        {
+            if (previousCollectionTitle.Equals(newCollectionTitle))
+            {
+                return true;
+            } else
+            {
+                return IsCollectionTitleUnique(userId, newCollectionTitle);
+            }
         }
 
         private bool ContainsCollectionFieldTitlesDuplicates(CollectionField[] collectionFields)
@@ -125,20 +143,37 @@ namespace CollectionsApp.Controllers
                 fieldTitlesList.Add(collectionField.Title);
             }
             fieldTitlesList.RemoveAll(s => s == null);
-            bool containDuplicates = fieldTitlesList.Distinct().Count() != fieldTitlesList.Count;
-            if (containDuplicates)
+            bool containsDuplicates = fieldTitlesList.Distinct().Count() != fieldTitlesList.Count;
+            if (containsDuplicates)
             {
                 ModelState.AddModelError(string.Empty, "Collection field titles can't contain duplicates.");
             }
-            return containDuplicates;
+            return containsDuplicates;
         }
 
-        private void EditColletionFieldValues(Collection collectionToEdit, EditCollectionViewModel model)
+        private async Task AddCollectionToDb(string collectionsOwnerId,
+            CreateCollectionViewModel model, CollectionField[] collectionFields)
+        {
+            var collectionToAdd = new Collection(collectionsOwnerId, model, collectionFields);
+            await _db.Collections.AddAsync(collectionToAdd);
+            _db.SaveChanges();
+        }
+
+        private void UpdateCollectionInDb(Collection collectionToEdit, EditCollectionViewModel model)
+        {
+            EditCollectionFieldValues(collectionToEdit, model);
+            _db.Collections.Update(collectionToEdit);
+            _db.SaveChanges();
+        }
+
+        
+        private void EditCollectionFieldValues(Collection collectionToEdit, EditCollectionViewModel model)
         {
             collectionToEdit.Title = model.Title;
             collectionToEdit.Theme = model.Theme;
             collectionToEdit.Description = model.Description;
-            collectionToEdit.ImageUrl = model.ImageUrl;
         }
+
+        
     }
 }

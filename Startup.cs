@@ -41,6 +41,8 @@ namespace CollectionsApp
                 options.Password.RequireDigit = false;
                 options.User.RequireUniqueEmail = true;
             }).AddEntityFrameworkStores<ApplicationContext>();
+
+            
         }
 
         // This method gets called by the runtime. Use this method to configure the HTTP request pipeline.

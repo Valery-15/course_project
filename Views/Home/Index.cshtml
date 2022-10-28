@@ -1,9 +1,23 @@
 ﻿@model CollectionsApp.ViewModels.HomePageViewModel
 
 <div>
-    <div>
-        <label class="h2 text-black">Last added items</label>
-        <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+    <div class="row">
+        <div class="col">
+            <label class="h2 text-black">Last added items</label>
+
+            <ul class="list-group" style="width: 15rem">
+                @foreach (var item in Model.LatestItems)
+                {
+                    <li class="list-group-item">
+                        <a href="/Items/Item?itemId=@item.Id" class="h4" style="color:mediumturquoise">@item.Title</a><br />
+                        <a href="/Items/ItemsList?collectionId=@item.CollectionId">@item.Collection.Title</a><br />
+                        <label>Author: @item.Author</label>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        @*<div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
             @foreach (var item in Model.LatestItems)
             {
                 <div class="col-sm-3">
@@ -23,12 +37,23 @@
                 </div>
             }
             <br /><br />
-        </div>
-    </div>
+        </div>*@
 
-    <div>
-        <label class="h2 text-black">Biggest collections</label>
-        <div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
+        <div class="col">
+            <label class="h2 text-black">Biggest collections</label>
+
+            <ul class="list-group" style="width: 15rem">
+                @foreach (var collection in Model.LargestCollections)
+                {
+                    <li class="list-group-item">
+                        <a href="/Items/ItemsList?collectionId=@collection.Id" class="h4 text-primary">@collection.Title</a><br />
+                        <label>Size: @collection.Size</label>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        @*<div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
             @foreach (var collection in Model.LargestCollections)
             {
                 <div class="col-sm-3">
@@ -45,23 +70,22 @@
                 </div>
 
             }
-        </div>
-    </div>
-
-    <div id="tagcloud">
-        <label class="h2 text-black">Tag cloud <i class="bi bi-cloud"></i></label>
-        @{
-            int index = Model.PopularTags.Count();
-        }
-        <ul>
-            @foreach (var tag in Model.PopularTags)
-            {
-                <li >
-                    <a href="/Tags/GetItemsByTag?tagId=@tag.Id" rel="@index">@tag.TagValue</a>
-                </li>
-                index--;
+        </div>*@
+        <div id="tagcloud" class="col">
+            <label class="h2 text-black">Tag cloud <i class="bi bi-cloud"></i></label>
+            @{
+                int index = Model.PopularTags.Count();
             }
-        </ul>
+            <ul>
+                @foreach (var tag in Model.PopularTags)
+                {
+                    <li>
+                        <a href="/Tags/GetItemsByTag?tagId=@tag.Id" rel="@index">@tag.TagValue</a>
+                    </li>
+                    index--;
+                }
+            </ul>
+        </div>
     </div>
 </div>
 

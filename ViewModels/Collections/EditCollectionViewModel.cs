@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
+using CollectionsApp.Models;
 
 namespace CollectionsApp.ViewModels
 {
@@ -21,7 +22,13 @@ namespace CollectionsApp.ViewModels
         [Display(Name = "Description")]
         public string Description { get; set; }
 
-        [Display(Name = "Image")]
-        public string ImageUrl { get; set; }
+        public EditCollectionViewModel(){}
+
+        public EditCollectionViewModel(Collection collectionToEdit) {
+            Title = collectionToEdit.Title;
+            Theme = collectionToEdit.Theme;
+            Description = collectionToEdit.Description;
+        }
+
     }
 }

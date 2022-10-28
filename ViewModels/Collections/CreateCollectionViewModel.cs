@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
+using CollectionsApp.Models;
 
 namespace CollectionsApp.ViewModels
 {
@@ -21,7 +22,11 @@ namespace CollectionsApp.ViewModels
         [Display(Name = "Description")]
         public string Description { get; set; }
 
-        [Display(Name = "Image")]
-        public string ImageUrl { get; set; }
+        public IEnumerable<CollectionField> AdditionalFields { get; set; }
+
+        public CreateCollectionViewModel()
+        {
+            AdditionalFields = new List<CollectionField>();
+        }
     }
 }
