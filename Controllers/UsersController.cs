@@ -68,13 +68,26 @@ namespace CoollectionsApp.Controllers
         [HttpPost]
         public async Task<IActionResult> EditUser(EditUserViewModel model, string userId)
         {
+            if (!ModelState.IsValid)
+            {
+                ViewBag.UserId = userId;
+                return View(model);
+            }
             IdentityUser userToEdit = await _userManager.FindByIdAsync(userId);
             if(userToEdit == null) return RedirectToAction("UsersList");
 
-            await UpdateUserInDb(userToEdit, model);
-            await RefreshCurrentUserAppCookie();
-
-            return RedirectToAction("UsersList");
+            var result = await UpdateUserInDb(userToEdit, model);
+            if (result.Succeeded)
+            {
+                await RefreshCurrentUserAppCookie();
+                return RedirectToAction("UsersList");
+            }
+            else
+            {
+                AddModelErrors(result.Errors, ModelState);
+                ViewBag.UserId = userId;
+                return View(model);
+            }
         }
 
         [HttpGet]
@@ -134,13 +147,13 @@ namespace CoollectionsApp.Controllers
             }
         }
 
-        private async Task UpdateUserInDb(IdentityUser userToEdit, EditUserViewModel model)
+        private async Task<IdentityResult> UpdateUserInDb(IdentityUser userToEdit, EditUserViewModel model)
         {
             userToEdit.Email = model.Email;
             userToEdit.UserName = model.UserName;
             await ManageUserRoles(userToEdit, "active user", model.IsActive);
             await ManageUserRoles(userToEdit, "admin", model.IsAdmin);
-            await _userManager.UpdateAsync(userToEdit);
+            return await _userManager.UpdateAsync(userToEdit);
         }
 
         private async Task ManageUserRoles(IdentityUser user, string role, bool isInRole)
