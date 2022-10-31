@@ -1,5 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
@@ -7,8 +6,6 @@ using Microsoft.AspNetCore.Mvc.ModelBinding;
 using Microsoft.AspNetCore.Authorization;
 using CollectionsApp.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using CollectionsApp.ViewModels;
 
 namespace CoollectionsApp.Controllers
@@ -58,7 +55,12 @@ namespace CoollectionsApp.Controllers
         {
             IdentityUser user = await _userManager.FindByIdAsync(userId);
             if (user == null) return RedirectToAction("UsersList");
-            EditUserViewModel userEditViewModel = new EditUserViewModel { Email = user.Email, UserName = user.UserName, IsAdmin = await _userManager.IsInRoleAsync(user, "admin"), IsActive = await _userManager.IsInRoleAsync(user, "active user") };
+            var userEditViewModel = new EditUserViewModel { 
+                Email = user.Email, 
+                UserName = user.UserName, 
+                IsAdmin = await _userManager.IsInRoleAsync(user, "admin"), 
+                IsActive = await _userManager.IsInRoleAsync(user, "active user") 
+            };
             ViewBag.UserId = userId;
             return View(userEditViewModel);
         }
@@ -69,29 +71,9 @@ namespace CoollectionsApp.Controllers
             IdentityUser userToEdit = await _userManager.FindByIdAsync(userId);
             if(userToEdit == null) return RedirectToAction("UsersList");
 
-            userToEdit.Email = model.Email;
-            userToEdit.UserName = model.UserName;
-            //status
-            if (model.IsActive)
-            {
-                await _userManager.AddToRoleAsync(userToEdit, "active user");
-            }
-            else
-            {
-                await _userManager.RemoveFromRoleAsync(userToEdit, "active user");
-            }
-            if (model.IsAdmin)
-            {
-                await _userManager.AddToRoleAsync(userToEdit, "admin");
-            }
-            else
-            {
-                await _userManager.RemoveFromRoleAsync(userToEdit, "admin");
-            }
-            var result = await _userManager.UpdateAsync(userToEdit);
+            await UpdateUserInDb(userToEdit, model);
+            await RefreshCurrentUserAppCookie();
 
-            var currentUser = await _userManager.GetUserAsync(this.User);
-            await _signInManager.RefreshSignInAsync(currentUser);
             return RedirectToAction("UsersList");
         }
 
@@ -104,12 +86,7 @@ namespace CoollectionsApp.Controllers
             IdentityUser user = await _userManager.FindByIdAsync(userId);
             if (user != null)
             {
-                var result = await _userManager.DeleteAsync(user);
-                //var currentUser = await _userManager.GetUserAsync(this.User);
-                //if (currentUser == null)
-                //{
-                //    return RedirectToAction("Index", "Home");
-                //}
+                await _userManager.DeleteAsync(user);
             }
             return RedirectToAction("UsersList");
         }
@@ -123,15 +100,8 @@ namespace CoollectionsApp.Controllers
 
             if (user != null)
             {
-                if (isActive)
-                {
-                    await _userManager.AddToRoleAsync(user, "active user");
-                } else
-                {
-                    await _userManager.RemoveFromRoleAsync(user, "active user");
-                }
-                var currentUser = await _userManager.GetUserAsync(this.User);
-                await _signInManager.RefreshSignInAsync(currentUser);
+                await ManageUserRoles(user, "active user", isActive);
+                await RefreshCurrentUserAppCookie();
             }
             return RedirectToAction("UsersList");
         }
@@ -162,6 +132,33 @@ namespace CoollectionsApp.Controllers
             {
                 modelState.AddModelError(string.Empty, error.Description);
             }
+        }
+
+        private async Task UpdateUserInDb(IdentityUser userToEdit, EditUserViewModel model)
+        {
+            userToEdit.Email = model.Email;
+            userToEdit.UserName = model.UserName;
+            await ManageUserRoles(userToEdit, "active user", model.IsActive);
+            await ManageUserRoles(userToEdit, "admin", model.IsAdmin);
+            await _userManager.UpdateAsync(userToEdit);
+        }
+
+        private async Task ManageUserRoles(IdentityUser user, string role, bool isInRole)
+        {
+            if (isInRole)
+            {
+                await _userManager.AddToRoleAsync(user, role);
+            }
+            else
+            {
+                await _userManager.RemoveFromRoleAsync(user, role);
+            }
+        }
+
+        private async Task RefreshCurrentUserAppCookie()
+        {
+            var currentUser = await _userManager.GetUserAsync(this.User);
+            await _signInManager.RefreshSignInAsync(currentUser);
         }
     }
 }

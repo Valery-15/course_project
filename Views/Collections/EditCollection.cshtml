@@ -1,7 +1,7 @@
 ﻿@model CollectionsApp.ViewModels.EditCollectionViewModel
 
 <div class="form-group">
-    <h1 class="h1 text-primary">Edit collection</h1>
+    <h1 class="h2 text-primary">Edit collection</h1>
 
     <form method="post" asp-controller="Collections" asp-action="EditCollection"
           asp-route-collectionId="@ViewBag.collection.Id" asp-route-collectionOwnerId="@ViewBag.collection.UserId">
@@ -24,7 +24,7 @@
 
         <div>
             <label asp-for="Description"></label><br />
-            <textarea asp-for="Description"></textarea>
+            <textarea asp-for="Description" style="width: 20rem"></textarea>
             <br />
         </div>
 

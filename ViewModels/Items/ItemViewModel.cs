@@ -12,8 +12,9 @@ namespace CollectionsApp.ViewModels
     public class ItemViewModel
     {
         public int CollectionId { get; set; }
-        public int ItemId { get; set; }
         public string CollectionTitle { get; set; }
+        public string CollectionOwnerId { get; set; }
+        public int ItemId { get; set; }
         public string Title { get; set; }
         public int LikesNumber { get; set; }
         public bool isCurrentUserLikedItem { get; set; }
@@ -29,8 +30,10 @@ namespace CollectionsApp.ViewModels
 
         public ItemViewModel(Item item, List<Tag> tags, string currentUserId, ApplicationContext db)
         {
+            var collection = db.Collections.Find(item.CollectionId);
             CollectionId = item.CollectionId;
-            CollectionTitle = db.Collections.Find(item.CollectionId).Title;
+            CollectionTitle = collection.Title;
+            CollectionOwnerId = collection.UserId;
             ItemId = item.Id;
             Title = item.Title;
             Tags = tags;

@@ -28,7 +28,5 @@ namespace CollectionsApp.ViewModels
             ItemFields = itemFields;
             Tags = new List<Tag>();
         }
-
-
     }
 }

@@ -4,6 +4,7 @@ using System.Linq;
 using System.Threading.Tasks;
 using System.ComponentModel.DataAnnotations;
 using CollectionsApp.Models;
+using Microsoft.AspNetCore.Http;
 
 namespace CollectionsApp.ViewModels
 {

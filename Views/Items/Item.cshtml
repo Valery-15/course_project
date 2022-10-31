@@ -4,6 +4,14 @@
 @inject SignInManager<IdentityUser> SignInManager
 @inject UserManager<IdentityUser> UserManager
 
+@{ 
+    bool isCurrentUserSignedIn = SignInManager.IsSignedIn(this.User);
+    bool isCurrentUserActive  = this.User.IsInRole("active user");
+    bool isCurrentUserAdmin = this.User.IsInRole("admin");
+    bool isCurrentUserCollectionOwner = Model.CollectionOwnerId.Equals(UserManager.GetUserId(this.User));
+    bool isCurrentUserHasRightToMakeChanges = isCurrentUserActive & isCurrentUserSignedIn & (isCurrentUserAdmin | isCurrentUserCollectionOwner);
+}
+
 <div>
     <div>
         <a class="h2 text-primary" href="/Items/ItemsList?collectionId=@Model.CollectionId">
@@ -13,10 +21,10 @@
 
     <div class="card" style="width: 18rem;">
         <div class="card-header">
-            <label class="h3 text-info">@Model.Title</label><br />
-            @if( Model.Tags.Count() != 0)
+            <h2 class="h3 text-info">@Model.Title</h2>
+            @if (Model.Tags.Count() != 0)
             {
-                foreach(var tag in Model.Tags)
+                foreach (var tag in Model.Tags)
                 {
                     <a asp-action="GetItemsByTag" asp-controller="Tags" asp-route-tagId="@tag.Id">
                         #@tag.TagValue
@@ -25,33 +33,48 @@
             }
         </div>
 
-        <ul class="list-group list-group-flush">
-            @foreach (var field in Model.AdditionalFields)
-            {
-                if (field.InputType.ToLower().Equals("checkbox"))
-                {
-                    if (field.Value == null)
-                    {
-                        <li class="list-group-item">@field.Title: no</li>
-                    } else
-                    {
-                        <li class="list-group-item">@field.Title: yes</li>
-                    }
-                } else
-                {
-                <li class="list-group-item">@field.Title: @field.Value</li>
+        <ul class="list-group">
 
+                @if (isCurrentUserHasRightToMakeChanges)
+                {
+                    <li class="list-group-item">
+                        <a href="/Items/EditItem?itemId=@Model.ItemId" class="btn btn-outline-success">
+                            <i class="bi bi-pencil"></i>
+                        </a>
+                        <a href="/Items/DeleteItem?itemId=@Model.ItemId" class="btn btn-outline-danger">
+                            <i class="bi bi-trash"></i>
+                        </a>
+                    </li>
+                 }
+                
+                @foreach (var field in Model.AdditionalFields)
+                {
+                    if (field.InputType.ToLower().Equals("checkbox"))
+                    {
+                        if (field.Value == null)
+                        {
+                            <li class="list-group-item">@field.Title: no</li>
+                        }
+                        else
+                        {
+                            <li class="list-group-item">@field.Title: yes</li>
+                        }
+                    }
+                    else
+                    {
+                        <li class="list-group-item">@field.Title: @field.Value</li>
+
+                    }
                 }
-            }
-            <li class="list-group-item align-content-end">
-                <button id="like" style="border:none; background:none;outline:none;color:deeppink"></button>
-                <label id="likesNumber"></label>
-            </li>
-        </ul>
+                <li class="list-group-item align-content-end">
+                    <button id="like" style="border:none; background:none;outline:none;color:deeppink"></button>
+                    <label id="likesNumber"></label>
+                </li>
+            </ul>
     </div><br />
 
 
-    @if (SignInManager.IsSignedIn(this.User))
+    @if (isCurrentUserSignedIn & isCurrentUserActive)
     {
         <div>
             <form method="post" asp-controller="Comments" asp-action="AddComment">
@@ -59,13 +82,13 @@
                 <textarea name="body" style="width: 18rem" placeholder="Your comment" required></textarea><br/>
                 <input type="submit" class="btn btn-primary" value="Send" />
             </form>
-        </div>
+        </div><br />
     }
 
-    <br />
+    
     <div class="card" style="width: 18rem;">
         <div class="card-header">
-            <label class="h4 text-dark" style="font-weight:500">Comments</label>
+            <label class="h3 text-dark" style="font-weight:500">Comments</label>
         </div>
         <div class="card-body">
             <table id="comments">
@@ -84,6 +107,7 @@
 
 <script>
     var comments = document.getElementById('comments');
+
     updateComments();
 
     function updateComments() {
@@ -111,7 +135,6 @@
                 setTimeout(updateComments, 5000);
             })
             .catch(e => {
-                console.log('Error: ', e);
                 setTimeout(updateComments, 5000);
             });
     }
@@ -133,51 +156,46 @@
     var isUserLikedItem;
     var url;
 
+    updateLikes();
 
     function updateLikes() {
         fetch('/Likes/ShowLikes?itemId=@Model.ItemId')
             .then(result => result.json())
             .then(data => {
-                console.log(data);
-                if (data.isCurrentUserLikedItem) {
-                    isUserLikedItem = true;
-                    url = '/Likes/RemoveLike?itemId=@Model.ItemId';
-                    like.className = "bi bi-heart-fill";
-                    console.log('remove like');
-                } else {
-                    isUserLikedItem = false;
-                    url = '/Likes/AddLike?itemId=@Model.ItemId';
-                    like.className = "bi bi-heart";
-                    console.log('add like');
-                }
-                likesNumber.innerHTML = data.likesNumber;
+                func(data);
             });
         setTimeout(updateLikes, 5000);
     }
-
-    updateLikes();
 
     if (isSignedIn.toLowerCase() == "true") {
         like.addEventListener("click", function () {
             fetch(url)
                 .then(response => response.json())
                 .then((data) => {
-                    console.log(data);
-                    if (data.isCurrentUserLikedItem) {
-                        isUserLikedItem = true;
-                        url = '/Likes/RemoveLike?itemId=@Model.ItemId';
-                        like.className = "bi bi-heart-fill";
-                        console.log('removw like ev list');
-                    } else {
-                        isUserLikedItem = false;
-                        url = '/Likes/AddLike?itemId=@Model.ItemId';
-                        like.className = "bi bi-heart";
-                        console.log('add like ev list');
-
-                    }
-                    likesNumber.innerHTML = data.likesNumber;
+                    func(data);
                     });
         });
+    }
+
+    function userAddedLikeToItem() {
+        isUserLikedItem = true;
+        url = '/Likes/RemoveLike?itemId=@Model.ItemId';
+        like.className = "bi bi-heart-fill";
+    }
+
+    function userRemovedLikeFromItem() {
+        isUserLikedItem = false;
+        url = '/Likes/AddLike?itemId=@Model.ItemId';
+        like.className = "bi bi-heart";
+    }
+
+    function func(data) {
+        if (data.isCurrentUserLikedItem) {
+            userAddedLikeToItem();
+        } else {
+            userRemovedLikeFromItem();
+        }
+        likesNumber.innerHTML = data.likesNumber;
     }
 </script>
 

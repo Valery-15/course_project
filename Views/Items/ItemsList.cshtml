@@ -1,7 +1,4 @@
 ﻿@using Microsoft.AspNetCore.Identity
-@using CollectionsApp.Models
-@using Microsoft.AspNetCore.Mvc;
-@using Markdig
 @inject SignInManager<IdentityUser> signInManager
 @inject UserManager<IdentityUser> userManager
 
@@ -9,24 +6,34 @@
     bool isUserSignedIn = signInManager.IsSignedIn(this.User);
     bool isCurrentUserAdmin = this.User.IsInRole("admin");
     bool isCurrentUserCollectionOwner = ViewBag.collection.User.Id.Equals(userManager.GetUserId(this.User));
+    bool isCurrentUserActive = this.User.IsInRole("active user");
+    bool isCurrentUserHasRightToMakeChanges = isUserSignedIn & isCurrentUserActive & (isCurrentUserAdmin | isCurrentUserCollectionOwner);
     string collectionOwner = isCurrentUserCollectionOwner ? "You" : ViewBag.collection.User.UserName;
+    string collectionImageSrc = "https://drive.google.com/uc?export=view&id=" + ViewBag.collection.ImageUrl;
 }
 
 <div>
     <nav class="navbar">
         <form>
-            <label class="h4 text-info">
-                Collection: @ViewBag.collection.Title<br />
+            <h1 class="h2 text-info">Collection: @ViewBag.collection.Title</h1>
+            <label>
                 Theme: @ViewBag.collection.Theme<br />
                 Owner: <a href="/Collections/CollectionsList?collectionsOwnerId=@ViewBag.collection.UserId">@collectionOwner</a>
             </label>
         </form>
-        @if (isUserSignedIn && (isCurrentUserAdmin || isCurrentUserCollectionOwner))
+        @if (isCurrentUserHasRightToMakeChanges)
         {
             <form class="form-inline">
                 <a asp-controller="Items" asp-action="CreateItem" asp-route-collectionId="@ViewBag.collection.Id" class="btn btn-outline-success">
                     <i class="bi bi-plus-circle"></i>
                 </a>
+            </form>
+        }
+
+        @if (ViewBag.collection.ImageUrl != null)
+        {
+            <form>
+                <img src="@collectionImageSrc" style="width:200px; height: 150px;border-radius: 5px" />
             </form>
         }
 
@@ -37,7 +44,7 @@
             <tr>
                 <th>Item</th>
                 <th>Tags</th>
-                @if (isUserSignedIn && (isCurrentUserAdmin || isCurrentUserCollectionOwner))
+                @if (isCurrentUserHasRightToMakeChanges)
                 {
                     <th></th>
                 }
@@ -50,14 +57,7 @@
 
 <script>
     var collectionId = '@ViewBag.collection.Id';
-    var isUserSignedIn = '@isUserSignedIn'.toLowerCase() == 'true';
-    var isCurrentUserAdmin = '@isCurrentUserAdmin'.toLowerCase()=='true';
-    var isCurrentUserCollectionOwner = '@isCurrentUserCollectionOwner'.toLowerCase()=='true';
-
-    console.log(collectionId);
-    console.log(isUserSignedIn);
-
-    
+    var isCurrentUserHasRightToMakeChanges = '@isCurrentUserHasRightToMakeChanges'.toLowerCase() == 'true';
 
     var itemsTable = document.getElementById('itemsTable');
 
@@ -68,62 +68,63 @@
         fetch(url)
             .then(res => res.json())
             .then(data => {
-                console.log('data: ', data)
-                clearTable(itemsTable, 1);
+                if (data.length == 0) {
+                    clearTable(itemsTable, 0);
+                } else {
+                    clearTable(itemsTable, 1);
 
-                data.forEach((item) => {
-                    var tr = document.createElement('tr');
-                    var td;
+                    data.forEach((item) => {
+                        var tr = document.createElement('tr');
 
-                    td = document.createElement('td');
-                    var a = document.createElement('a');
-                    var linkText = document.createTextNode(item.title);
-                    a.appendChild(linkText);
-                    a.href = "/Items/Item?itemId=" + item.id;
-                    td.appendChild(a);
-                    tr.appendChild(td);
+                        createTdWithA(tr, item.title, "/Items/Item?itemId=" + item.id);
 
-                    td = document.createElement('td');
-                    var tags = JSON.parse(item.jsonTags);
-                    console.log(tags);
-                    tags.forEach(tag => {
-                        console.log(tag.Id);
-                        a = document.createElement('a');
-                        linkText = document.createTextNode("#" + tag.TagValue + " ");
-                        a.appendChild(linkText);
-                        a.href = "/Tags/GetItemsByTag?tagId=" + tag.Id;
-                        td.appendChild(a);
-                    });
-                    tr.appendChild(td);
-
-                    if (isUserSignedIn && (isCurrentUserAdmin || isCurrentUserCollectionOwner)) {
-                        td = document.createElement('td');
-                        a = document.createElement('a');
-                        var i = document.createElement('i');
-                        i.className = "bi bi-pencil";
-                        a.appendChild(i);
-                        a.className = "btn btn-outline-success"
-                        a.href = "/Items/EditItem?itemId=" + item.id;
-                        td.appendChild(a);
-
-                        a = document.createElement('a');
-                        i = document.createElement('i');
-                        i.className = "bi bi-trash";
-                        a.appendChild(i);
-                        a.className = "btn btn-outline-danger";
-                        a.href = "/Items/DeleteItem?itemId=" + item.id;
-                        td.appendChild(a);
+                        var td = document.createElement('td');
+                        var tags = JSON.parse(item.jsonTags);
+                        tags.forEach(tag => {
+                            a = document.createElement('a');
+                            linkText = document.createTextNode("#" + tag.TagValue + " ");
+                            a.appendChild(linkText);
+                            a.href = "/Tags/GetItemsByTag?tagId=" + tag.Id;
+                            td.appendChild(a);
+                        });
                         tr.appendChild(td);
-                    }
 
-                    itemsTable.append(tr);
-                });
+                        if (isCurrentUserHasRightToMakeChanges) {
+                            td = document.createElement('td');
+                            createAWithIcon(td, "bi bi-pencil", "btn btn-outline-success", "/Items/EditItem?itemId=" + item.id);
+                            createAWithIcon(td, "bi bi-trash", "btn btn-outline-danger", "/Items/DeleteItem?itemId=" + item.id);
+                            tr.appendChild(td);
+                        }
+
+                        itemsTable.append(tr);
+                    });
+                }
+
                 setTimeout(updateItemsList, 5000);
             })
             .catch(e => {
-                console.log('Error: ', e);
                 setTimeout(updateItemsList, 5000);
             });
+    }
+
+    function createTdWithA(tr, text, href) {
+        td = document.createElement('td');
+        var a = document.createElement('a');
+        var linkText = document.createTextNode(text);
+        a.appendChild(linkText);
+        a.href = href;
+        td.appendChild(a);
+        tr.appendChild(td);
+    }
+
+    function createAWithIcon(td, iconClassName, aClassName, aHref) {
+        a = document.createElement('a');
+        var i = document.createElement('i');
+        i.className = iconClassName;
+        a.appendChild(i);
+        a.className = aClassName;
+        a.href = aHref;
+        td.appendChild(a);
     }
 
     function clearTable(table, offset = 0) {

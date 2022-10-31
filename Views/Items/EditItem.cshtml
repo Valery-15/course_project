@@ -9,7 +9,7 @@
         <div>
             <label asp-for="Title"></label><br />
             <input asp-for="Title" />
-            <br />
+            <br /><br />
         </div>
 
         <div>
@@ -20,8 +20,9 @@
                     #
                     @if (i < Model.Tags.Count())
                     {
-                        <input type="text" name="tags[@i].TagValue" value="@Model.Tags[i].TagValue" style="width: 8rem" class="typeahead tt-query" autocomplete="off" spellcheck="false"/>
-                    } else
+                        <input type="text" name="tags[@i].TagValue" value="@Model.Tags[i].TagValue" style="width: 8rem" class="typeahead tt-query" autocomplete="off" spellcheck="false" />
+                    }
+                    else
                     {
                         <input type="text" name="tags[@i].TagValue" style="width: 8rem" class="typeahead tt-query" autocomplete="off" spellcheck="false" />
                     }
@@ -41,7 +42,15 @@
             <input type="hidden" name="itemFields[@index].InputType" value="@field.InputType" />
             @if (field.InputType.Equals("checkbox"))
             {
-                <input type="checkbox" name="itemFields[@index].Value" id="@field.Title" value="@field.Value" />
+                if (field.Value == null)
+                {
+                    <input type="checkbox" name="itemFields[@index].Value" id="@field.Title" value="@field.Value" />
+                }
+                else
+                {
+                    <input type="checkbox" name="itemFields[@index].Value" id="@field.Title" value="@field.Value" checked />
+
+                }
                 <label for="@field.Title">@field.Title</label><br />
             }
             else
@@ -80,6 +89,11 @@
             prefetch: '/Tags/GetTagsList'
         });
 
+        tags.clear();
+        tags.clearPrefetchCache();
+        tags.clearRemoteCache();
+        tags.initialize(true);
+
         // Initializing the typeahead
         $('.typeahead').typeahead({
             hint: true,
@@ -88,7 +102,7 @@
         },
         {
             name: 'tags',
-            limit: 5,
+            limit: 3,
             source: tags
         });
     });

@@ -7,10 +7,7 @@ namespace CollectionsApp.Models
 {
     public class ItemField : CollectionField
     {
-        public ItemField()
-        {
-
-        }
+        public ItemField(){ }
 
         public ItemField(CollectionField collectionField)
         {

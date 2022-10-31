@@ -35,66 +35,22 @@
         fetch(url)
             .then(res => res.json())
             .then(data => {
-                console.log('data: ', data)
                 clearTable(usersTable, 1);
 
                 data.forEach((user) => {
                     var tr = document.createElement('tr');
-                    var td;
 
-                    //td = document.createElement('td');
-                    //var checkbox = document.createElement("input");
-                    //checkbox.setAttribute("type", "checkbox");
-                    //checkbox.id = user.id;
-                    //td.appendChild(checkbox);
-                    //tr.appendChild(td);
+                    createTdWithA(tr, user.userName, "/Collections/CollectionsList?collectionsOwnerId=" + user.id);
 
-                    td = document.createElement('td');
-                    var a = document.createElement('a');
-                    var linkText = document.createTextNode(user.userName);
-                    a.appendChild(linkText);
-                    a.href = "/Collections/CollectionsList?collectionsOwnerId=" + user.id;
-                    td.appendChild(a);
-                    tr.appendChild(td);
+                    createTd(tr, user.email);
+                    createTd(tr, user.isAdmin ? 'admin' : '');
+                    createTd(tr, user.status);
 
-                    td = document.createElement('td');
-                    td.innerHTML = user.email;
-                    tr.appendChild(td);
-
-                    td = document.createElement('td');
-                    if (user.isAdmin) {
-                        td.innerHTML = 'admin';
-                    }
-                    tr.appendChild(td);
-
-                    td = document.createElement('td');
-                    td.innerHTML = user.status;
-                    tr.appendChild(td);
-
-                    td = document.createElement('td');
-                    a = document.createElement('a');
-                    var i = document.createElement('i');
-                    i.className = "bi bi-pencil";
-                    a.appendChild(i);
-                    a.className = "btn btn-outline-success"
-                    a.href = "/Users/EditUser?userId=" + user.id;
-                    td.appendChild(a);
-
-                    a = document.createElement('a');
-                    i = document.createElement('i');
-                    i.className = "bi bi-trash";
-                    a.appendChild(i);
-                    a.className = "btn btn-outline-danger";
-                    a.href = "/Users/DeleteUser?userId=" + user.id;
-                    td.appendChild(a);
-
-                    a = document.createElement('a');
-                    i = document.createElement('i');
-                    i.className = (user.status === 'active') ? 'bi bi-lock' : 'bi bi-unlock'; 
-                    a.appendChild(i);
-                    a.className = "btn btn-outline-success";
-                    a.href = "/Users/ChangeUserStatus?userId=" + user.id + "&currentStatus=" + user.status;
-                    td.appendChild(a);
+                    var td = document.createElement('td');
+                    createAWithIcon(td, "bi bi-pencil", "btn btn-outline-success", "/Users/EditUser?userId=" + user.id);
+                    createAWithIcon(td, "bi bi-trash", "btn btn-outline-danger", "/Users/DeleteUser?userId=" + user.id);
+                    createAWithIcon(td, (user.status === 'active') ? 'bi bi-lock' : 'bi bi-unlock',
+                        "btn btn-outline-success", "/Users/ChangeUserStatus?userId=" + user.id + "&currentStatus=" + user.status);
 
                     tr.appendChild(td);
 
@@ -103,9 +59,34 @@
                 setTimeout(updateUsersList, 5000);
             })
             .catch(e => {
-                console.log('Error: ', e);
                 setTimeout(updateUsersList, 5000);
             });
+    }
+
+    function createTdWithA(tr, text, href) {
+        td = document.createElement('td');
+        var a = document.createElement('a');
+        var linkText = document.createTextNode(text);
+        a.appendChild(linkText);
+        a.href = href;
+        td.appendChild(a);
+        tr.appendChild(td);
+    }
+
+    function createTd(tr, text) {
+        td = document.createElement('td');
+        td.innerHTML = text;
+        tr.appendChild(td);
+    }
+
+    function createAWithIcon(td, iconClassName, aClassName, aHref) {
+        a = document.createElement('a');
+        var i = document.createElement('i');
+        i.className = iconClassName;
+        a.appendChild(i);
+        a.className = aClassName;
+        a.href = aHref;
+        td.appendChild(a);
     }
 
     function clearTable(table, offset = 0) {

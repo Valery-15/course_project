@@ -26,7 +26,6 @@
                     {
                         <input type="text" name="tags[@i].TagValue" style="width: 8rem" class="typeahead tt-query" autocomplete="off" spellcheck="false" />
                     }
-
                 </label>
                 <br />
             }
@@ -42,7 +41,15 @@
             <input type="hidden" name="itemFields[@index].InputType" value="@field.InputType" />
             @if (field.InputType.Equals("checkbox"))
             {
-                <input type="checkbox" name="itemFields[@index].Value" value="@field.Value" id="@field.Title" />
+                if (field.Value == null)
+                {
+                    <input type="checkbox" name="itemFields[@index].Value" id="@field.Title" value="@field.Value" />
+                }
+                else
+                {
+                    <input type="checkbox" name="itemFields[@index].Value" id="@field.Title" value="@field.Value" checked />
+
+                }
                 <label for="@field.Title">@field.Title</label><br />
             }
             else
@@ -77,8 +84,13 @@
         var tags = new Bloodhound({
             datumTokenizer: Bloodhound.tokenizers.whitespace,
             queryTokenizer: Bloodhound.tokenizers.whitespace,
-            prefetch: '/Tags/GetTagsList'
+            prefetch:  '/Tags/GetTagsList'
         });
+
+        tags.clear();
+        tags.clearPrefetchCache();
+        tags.clearRemoteCache();
+        tags.initialize(true);
 
         // Initializing the typeahead
         $('.typeahead').typeahead({
@@ -88,37 +100,8 @@
         },
         {
             name: 'tags',
-            limit: 5,
+            limit: 3,
             source: tags
         });
     });
 </script>
-
-@*@foreach (var field in Model.Fields)
-    {
-        <div>
-            @if (field.InputType.Equals("checkbox"))
-            {
-                <label for="@field.Title">@field.Title</label><br />
-                <input type="checkbox" name="@field.Title" id="@field.Title" />
-            }
-            else
-            {
-                <label for="@field.Title">@field.Title</label><br />
-                @if (field.InputType.Equals("textarea"))
-                {
-                    <textarea name="@field.Title" id="@field.Title"></textarea>
-                }
-                else if (field.InputType.Equals("text"))
-                {
-                    <input type="text" name="@field.Title" id="@field.Title" maxlength="256" />
-                }
-                else
-                {
-                    <input type="@field.InputType" name="@field.Title" id="@field.Title" />
-
-                }
-            }
-            <br /><br />
-        </div>
-    }*@

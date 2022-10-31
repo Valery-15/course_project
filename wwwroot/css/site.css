@@ -70,6 +70,22 @@ body {
   line-height: 60px; /* Vertically center the text there */
 }
 
-label {
-    font-family:'Comic Sans MS';
+input[type=text], input[type=password], input[type=number], input[type=date] {
+    border: 2px solid #CCCCCC;
+    border-radius: 8px;
+    font-size: 16px; /* Set input font size */
+    height: 30px;
+    line-height: 30px;
+    outline: medium none;
+    padding: 8px 12px;
+    width: 200px;
+}
+
+textarea {
+    border: 2px solid #CCCCCC;
+    border-radius: 8px;
+    font-size: 16px; /* Set input font size */
+    height: 80px;
+    outline: medium none;
+    width: 300px;
 }

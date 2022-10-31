@@ -11,29 +11,27 @@
     string currentUserId = userManager.GetUserId(this.User);
     bool isCurrentUserCollectionsOwner = ViewBag.collectionsOwnerId.Equals(currentUserId);
     bool isCurrentUserAdmin = this.User.IsInRole("admin");
+    bool isCurrentUserHasRightToMakeChanges = isUserSignedIn & isCurrentUserActive & (isCurrentUserAdmin | isCurrentUserCollectionsOwner);
     IdentityUser collectionsOwner = await userManager.FindByIdAsync(ViewBag.collectionsOwnerId);
     string collectionsOwnerName = collectionsOwner.UserName;
+    string heading = isCurrentUserCollectionsOwner ? "My collections" : (collectionsOwnerName + "'s  collections");
 }
+
 
 <div>
     <nav class="navbar">
-        @if (isCurrentUserCollectionsOwner)
+        <form class="form-inline">
+            <h1>@heading</h1>
+        </form>
+        @if (isCurrentUserHasRightToMakeChanges)
         {
-            <form class="form-inline">
-                <h1>My Collections</h1>
-            </form>
             <form class="form-inline">
                 <a asp-controller="Collections" asp-action="CreateCollection" asp-route-collectionsOwnerId="@ViewBag.collectionsOwnerId" class="btn btn-outline-success">
                     <i class="bi bi-plus-circle"></i>
                 </a>
             </form>
         }
-        else
-        {
-            <form class="form-inline">
-                <h1>@collectionsOwnerName's  collections</h1>
-            </form>
-        }
+            
     </nav>
 
     <table class="table table-striped table-bordered" id="collectionsTable">
@@ -43,7 +41,7 @@
                 <th>Theme</th>
                 <th>Description</th>
                 <th>Size</th>
-                @if (isCurrentUserActive && (isCurrentUserCollectionsOwner || isCurrentUserAdmin))
+                @if (isCurrentUserHasRightToMakeChanges)
                 {
                     <th></th>
                 }
@@ -56,11 +54,9 @@
 
 <script>
     var collectionsOwnerId = '@ViewBag.collectionsOwnerId';
-    var collectionsTable = document.getElementById('collectionsTable');
-    var isCurrentUserActive = '@isCurrentUserActive'.toLowerCase() == 'true';
-    var isCurrentUserCollectionsOwner = '@isCurrentUserCollectionsOwner'.toLowerCase() == 'true';
-    var isCurrentUserAdmin = '@isCurrentUserAdmin'.toLowerCase() == 'true';
+    var isCurrentUserHasRightToMakeChanges = '@isCurrentUserHasRightToMakeChanges'.toLowerCase() == 'true';
 
+    var collectionsTable = document.getElementById('collectionsTable');
 
     updateCollectionsList();
 
@@ -69,57 +65,31 @@
         fetch(url)
             .then(result => result.json())
             .then(data => {
-                clearTable(collectionsTable, 1);
+                if (data.length == 0) {
+                    clearTable(collectionsTable, 0);
+                } else {
+                    clearTable(collectionsTable, 1);
 
-                data.forEach(collection => {
-                    var tr = document.createElement('tr');
-                    var td;
+                    data.forEach(collection => {
+                        var tr = document.createElement('tr');
 
-                    td = document.createElement('td');
-                    var a = document.createElement('a');
-                    var linkText = document.createTextNode(collection.title);
-                    a.appendChild(linkText);
-                    a.href = "/Items/ItemsList?collectionId=" + collection.id;
-                    td.appendChild(a);
-                    tr.appendChild(td);
+                        createTdWithA(tr, collection.title, "/Items/ItemsList?collectionId=" + collection.id);
+                        createTd(tr, collection.theme);
+                        createTd(tr, collection.description);
+                        createTd(tr, collection.size);
 
-                    td = document.createElement('td');
-                    td.innerHTML = collection.theme;
-                    tr.appendChild(td);
+                        if (isCurrentUserHasRightToMakeChanges) {
+                            var td = document.createElement('td');
+                            createAWithIcon(td, "bi bi-pencil", "btn btn-outline-success",
+                                "/Collections/EditCollection?collectionId=" + collection.id);
+                            createAWithIcon(td, "bi bi-trash", "btn btn-outline-danger",
+                                "/Collections/DeleteCollection?collectionId=" + collection.id);
+                            tr.appendChild(td);
+                        }
 
-                    td = document.createElement('td');
-                    td.innerHTML = collection.description;
-                    tr.appendChild(td);
-
-                    td = document.createElement('td');
-                    td.innerHTML = collection.size;
-                    tr.appendChild(td);
-
-
-                    if (isCurrentUserActive &&
-                        (isCurrentUserCollectionsOwner || isCurrentUserAdmin)) {
-                        td = document.createElement('td');
-                        a = document.createElement('a');
-                        var i = document.createElement('i');
-                        i.className = "bi bi-pencil";
-                        a.appendChild(i);
-                        a.className = "btn btn-outline-success"
-                        a.href = "/Collections/EditCollection?collectionId=" + collection.id;
-                        td.appendChild(a);
-
-                        a = document.createElement('a');
-                        i = document.createElement('i');
-                        i.className = "bi bi-trash";
-                        a.appendChild(i);
-                        a.className = "btn btn-outline-danger";
-                        a.href = "/Collections/DeleteCollection?collectionId=" + collection.id;
-                        td.appendChild(a);
-
-                        tr.appendChild(td);
-                    }
-
-                    collectionsTable.append(tr);
-                });
+                        collectionsTable.append(tr);
+                    });
+                }
                 setTimeout(updateCollectionsList, 5000);
             })
             .catch(e => {
@@ -127,16 +97,30 @@
             });
     }
 
-    function createTdWithA() {
-
+    function createTdWithA(tr, text, href) {
+        td = document.createElement('td');
+        var a = document.createElement('a');
+        var linkText = document.createTextNode(text);
+        a.appendChild(linkText);
+        a.href = href;
+        td.appendChild(a);
+        tr.appendChild(td);
     }
 
-    function createTd() {
-
+    function createTd(tr, text) {
+        td = document.createElement('td');
+        td.innerHTML = text;
+        tr.appendChild(td);
     }
 
-    function createAWithIcon() {
-
+    function createAWithIcon(td, iconClassName, aClassName, aHref) {
+        a = document.createElement('a');
+        var i = document.createElement('i');
+        i.className = iconClassName;
+        a.appendChild(i);
+        a.className = aClassName;
+        a.href = aHref;
+        td.appendChild(a);
     }
 
     function clearTable(table, offset = 0) {

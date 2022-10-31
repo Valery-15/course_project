@@ -2,10 +2,12 @@
 
 <div class="form-group">
     <h1 class="h1 text-primary">Registration</h1>
+
     <form method="post" asp-controller="Account" asp-action="Register">
         <div asp-validation-summary="All"></div>
+
         <div>
-            <br /><label asp-for="Email"></label>
+            <label asp-for="Email"></label>
             <br /><input asp-for="Email" />
         </div>
         <div>

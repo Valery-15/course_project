@@ -3,44 +3,22 @@
 <div>
     <div class="row">
         <div class="col">
-            <label class="h2 text-black">Last added items</label>
+            <h1 class="h3 text-black">Last added items</h1>
 
             <ul class="list-group" style="width: 15rem">
                 @foreach (var item in Model.LatestItems)
                 {
                     <li class="list-group-item">
-                        <a href="/Items/Item?itemId=@item.Id" class="h4" style="color:mediumturquoise">@item.Title</a><br />
-                        <a href="/Items/ItemsList?collectionId=@item.CollectionId">@item.Collection.Title</a><br />
+                        <a href="/Items/Item?itemId=@item.Id" class="h4 text-primary" >@item.Title</a><br />
+                        <a href="/Items/ItemsList?collectionId=@item.CollectionId" style="color:crimson">@item.Collection.Title</a><br />
                         <label>Author: @item.Author</label>
                     </li>
                 }
             </ul>
         </div>
 
-        @*<div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
-            @foreach (var item in Model.LatestItems)
-            {
-                <div class="col-sm-3">
-                    <div class="card mb-4 rounded-3 shadow-sm">
-                        <div class="card-header py-3">
-                            <a class="my-0 fw-normal h4 text-info font-italic" href="/Items/Item?itemId=@item.Id">@item.Title</a>
-                        </div>
-                        <div class="card-body">
-                            <ul class="list-unstyled mt-3 mb-4">
-                                <li>
-                                    <a href="/Items/ItemsList?collectionId=@item.CollectionId">@item.Collection.Title</a>
-                                </li>
-                                <li>Author: @item.Author</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-            }
-            <br /><br />
-        </div>*@
-
         <div class="col">
-            <label class="h2 text-black">Biggest collections</label>
+            <h1 class="h3 text-black">Biggest collections</h1>
 
             <ul class="list-group" style="width: 15rem">
                 @foreach (var collection in Model.LargestCollections)
@@ -53,52 +31,37 @@
             </ul>
         </div>
 
-        @*<div class="row row-cols-1 row-cols-md-3 mb-3 text-center">
-            @foreach (var collection in Model.LargestCollections)
-            {
-                <div class="col-sm-3">
-                    <div class="card mb-4 rounded-3 shadow-sm">
-                        <div class="card-header py-3">
-                            <a href="/Items/ItemsList?collectionId=@collection.Id" class="my-0 fw-normal h4 text-danger">@collection.Title</a>
-                        </div>
-                        <div class="card-body">
-                            <ul class="list-unstyled mt-3 mb-4">
-                                <li>Size: @collection.Size</li>
-                            </ul>
-                        </div>
-                    </div>
-                </div>
-
-            }
-        </div>*@
-        <div id="tagcloud" class="col">
-            <label class="h2 text-black">Tag cloud <i class="bi bi-cloud"></i></label>
+        <div id="tagcloud" class="col" style="width: 20rem">
+            <h1 class="h3 text-black">Tag cloud <i class="bi bi-cloud" style="color:dodgerblue"></i></h1>
             @{
                 int index = Model.PopularTags.Count();
+                int k = 0;
             }
-            <ul>
-                @foreach (var tag in Model.PopularTags)
+            @foreach (var tag in Model.PopularTags)
+            {
+                <a href="/Tags/GetItemsByTag?tagId=@tag.Id" rel="@index">@tag.TagValue</a>
+                k++;
+                index--;
+                if (k % 3 == 0)
                 {
-                    <li>
-                        <a href="/Tags/GetItemsByTag?tagId=@tag.Id" rel="@index">@tag.TagValue</a>
-                    </li>
-                    index--;
+                    <br />
+                } else
+                {
+                    <label>   </label>
                 }
-            </ul>
+            }
         </div>
     </div>
 </div>
 
-@section Scripts {
-    <script src="~/lib/tagcloud/dist/jquery.tagcloud.js"></script>
+<script src="~/lib/tagcloud/dist/jquery.tagcloud.js"></script>
 
-    <script>
-        $("#tagcloud a").tagcloud({
-            size: { start: 20, end: 36, unit: "px" },
-            color: { start: '#3498DB', end: '#46CFB0' }
-        });
-    </script>
-}
+<script>
+    $("#tagcloud a").tagcloud({
+        size: { start: 20, end: 30, unit: "px" },
+        color: { start: '#3498DB', end: '#46CFB0' }
+    });
+</script>
 
 
 

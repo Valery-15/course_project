@@ -1,17 +1,8 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
-using System.Threading.Tasks;
+﻿using System.Linq;
 using Microsoft.AspNetCore.Mvc;
-using System.Text.Json;
 using CollectionsApp.Models;
 using Microsoft.AspNetCore.Identity;
-using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
-using CollectionsApp.ViewModels;
-using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Authorization;
-
 
 namespace CollectionsApp.Controllers
 {
@@ -40,16 +31,14 @@ namespace CollectionsApp.Controllers
             });
         }
 
-
         [HttpGet]
         public IActionResult AddLike(int itemId)
         {
-            Like likeToAdd = new Like { UserId = _userManager.GetUserId(this.User), ItemId = itemId };
+           var likeToAdd = new Like { UserId = _userManager.GetUserId(this.User), ItemId = itemId };
             _db.Likes.Add(likeToAdd);
             _db.SaveChanges();
             return RedirectToAction("ShowLikes", new { itemId = itemId });
         }
-
 
         [HttpGet]
         public IActionResult RemoveLike(int itemId)

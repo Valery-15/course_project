@@ -1,9 +1,22 @@
 ﻿@model CollectionsApp.ViewModels.CreateCollectionViewModel
 
-<div class="form-group">
-    <h1 class="h1 text-primary">Create collection</h1>
+@{
+    var inputTypes = new List<string[]>
+    (new string[][] {
+                        new string[]{ "number", "Integer fields" },
+                        new string[]{ "text", "String fields" },
+                        new string[]{ "textarea", "Multistring fields" },
+                        new string[]{ "date", "Date fields" },
+                        new string[]{ "checkbox", "Bool fields" } });
+    int index = 0;
+}
 
-    <form method="post" asp-controller="Collections" asp-action="CreateCollection" asp-route-collectionsOwnerId="@ViewBag.collectionsOwnerId">
+<div class="form-group">
+    <h1 class="h2 text-primary">Create collection</h1>
+
+    <form method="post" enctype="multipart/form-data"
+          asp-controller="Collections" asp-action="CreateCollection"
+          asp-route-collectionsOwnerId="@ViewBag.collectionsOwnerId">
         <div asp-validation-summary="All"></div>
         <div class="row">
             <div class="col">
@@ -22,47 +35,48 @@
             </div>
         </div>
 
-        <div>
-            <label asp-for="Description"></label><br />
-            <textarea asp-for="Description" style="width:20rem"></textarea>
-            <br /><br />
+        <div class="row">
+            <div class="col">
+                <label asp-for="Description"></label><br />
+                <textarea asp-for="Description" style="width:20rem"></textarea>
+                <br /><br />
+            </div>
+            <div class="col">
+                <label>Collection image</label><br />
+                <input type="file" class="dropzone dz-clickable" style="height:50px;width:300px" accept="image/*" name="collectionImage" id="collectionImage"><br />
+            </div>
         </div>
 
         <div>
-            <label>Additional fields</label><br />
+            <h4 class="text-success">
+                Existing fields: "Title", "Tags"
+            </h4><br />
+            <h4 class="text-primary">
+                Additional fields
+            </h4>
         </div>
 
         <div class="form-row">
-            @{
-                var inputTypes = new List<string[]>
-                (new string[][] {
-                        new string[]{ "number", "Integer fields" },
-                        new string[]{ "text", "String fields" },
-                        new string[]{ "textarea", "Multistring fields" },
-                        new string[]{ "date", "Date fields" },
-                        new string[]{ "checkbox", "Bool fields" } });
-                int index = 0;
-            }
             @foreach (var inputType in inputTypes)
             {
-            <div>
-                <br />
-                <label>@inputType[1]:</label>
-                @for (int i = 0; i < 3; i++)
-                {
-                    @if (ViewBag.collectionFields!= null)
-                    { 
-                        <input name="collectionFields[@index].Title" value="@ViewBag.collectionFields[index].Title" style="width: 10rem" autocomplete="off" />
-                    }
-                    else
+                <div>
+                    <br />
+                    <label>@inputType[1]:</label>
+                    @for (int i = 0; i < 3; i++)
                     {
-                        <input name="collectionFields[@index].Title" style="width: 10rem" autocomplete="off" />
+                        @if (ViewBag.collectionFields != null)
+                        {
+                            <input type="text" name="collectionFields[@index].Title" value="@ViewBag.collectionFields[index].Title" style="width: 10rem" autocomplete="off" />
+                        }
+                        else
+                        {
+                            <input type="text" name="collectionFields[@index].Title" style="width: 10rem" autocomplete="off" />
+                        }
+                        <input type="hidden" name="collectionFields[@index].InputType" value="@inputType[0]" />
+                        index++;
                     }
-                    <input type="hidden" name="collectionFields[@index].InputType" value="@inputType[0]" />
-                    index++;
-                }
-                <br />
-            </div>
+                    <br />
+                </div>
             }
         </div>
 
@@ -73,13 +87,4 @@
 </div>
 
 
-
-@*<div class="jumbotron">
-    <form action="~/Home/SaveUploadedFile" method="post" enctype="multipart/form-data" class="dropzone" id="dropzoneForm" style="width: 50px; background: none; border: none;">
-        <div class="fallback">
-            <input name="file" type="file" multiple />
-            <input type="submit" value="Upload" />
-        </div>
-    </form>
-</div>*@
 

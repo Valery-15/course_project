@@ -1,11 +1,7 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Text.Json;
 using Microsoft.AspNetCore.Identity;
-using CollectionsApp.Models;
-using System.ComponentModel.DataAnnotations;
 using CollectionsApp.ViewModels;
-using System.Linq;
 
 namespace CollectionsApp.Models
 {
@@ -28,15 +24,14 @@ namespace CollectionsApp.Models
             Items = new HashSet<Item>();
         }
 
-        public Collection(string collectionOwnerId, CreateCollectionViewModel model, CollectionField[] additionalFields)
+        public Collection(string collectionOwnerId, CreateCollectionViewModel model, List<CollectionField> additionalFields)
         {
             UserId = collectionOwnerId;
             Title = model.Title;
             Description = model.Description;
             Theme = model.Theme;
-            List<CollectionField> fields = additionalFields.ToList();
-            fields.RemoveAll(s => s.Title == null);
-            AdditionalFields = JsonSerializer.Serialize(fields);
+            additionalFields.RemoveAll(s => s.Title == null);
+            AdditionalFields = JsonSerializer.Serialize(additionalFields);
         }
     }
 }

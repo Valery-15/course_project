@@ -1,50 +1,51 @@
 ﻿@model CollectionsApp.ViewModels.SearchResultViewModel
 
+@{ 
+    int foundItemsNumber = Model.Items.Count();
+    int foundCollectionsNumber = Model.Collections.Count();
+}
 <div>
     <div>
-        <h1>Search results for "@ViewBag.Query"</h1>
+        @if (foundItemsNumber == 0 && foundCollectionsNumber == 0)
+        {
+            <h1 class="h2 text-dark">No matches found for "@ViewBag.Query"</h1>
+        }
+        else
+        {
+            <h1 class="h2 text-info">Search results for "@ViewBag.Query"</h1>
+        }
     </div>
 
-    <div>
-        <div>
-            <label class="h3">Found items</label>
-            <ul>
-                @foreach (var item in Model.Items)
-                {
-                    <li>
-                        <a href="/Items/Item?itemId=@item.Id">@item.Title</a>
-                    </li>
-                    @*<div class="col-sm-3">
-                        <div class="card mb-4 rounded-3 shadow-sm">
-                            <div class="card-header py-3">
-                                <a class="my-0 fw-normal h4 text-info font-italic" href="/Items/Item?itemId=@item.Id">@item.Title</a>
-                            </div>
-                        </div>
-                    </div>*@
-                }
-            </ul>
-        </div>
-    </div>
+    <div class="row">
+        @if (foundItemsNumber != 0)
+        {
+            <div class="col">
+                <h2 class="h3">Found items</h2>
+                <ul>
+                    @foreach (var item in Model.Items)
+                    {
+                        <li style="list-style-type:none">
+                            <a href="/Items/Item?itemId=@item.Id">@item.Title</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
 
-    <div>
-        <div>
-            <label>Found collections</label>
-            <ul>
-                @foreach (var collection in Model.Collections)
-                {
-                <li>
-                    <a href="/Items/ItemsList?collectionId=@collection.Id">@collection.Title</a>
-                </li>
-                    @*<div class="col-3">
-                <div class="card mb-4 rounded-3 shadow-sm">
-                    <div class="card-header py-3">
-                        <a href="/Items/ItemsList?collectionId=@collection.Id" class="my-0 fw-normal h4 text-danger">@collection.Title</a>
-                    </div>
-                </div>
-            </div>*@
-                }
-            </ul>
-        </div>
+        @if (foundCollectionsNumber != 0)
+        {
+            <div class="col">
+                <h2 class="h3">Found collections</h2>
+                <ul>
+                    @foreach (var collection in Model.Collections)
+                    {
+                        <li style="list-style-type:none">
+                            <a href="/Items/ItemsList?collectionId=@collection.Id">@collection.Title</a>
+                        </li>
+                    }
+                </ul>
+            </div>
+        }
     </div>
 </div>
 

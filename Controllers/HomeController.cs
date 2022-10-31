@@ -1,14 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Diagnostics;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using CollectionsApp.Models;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using CollectionsApp.ViewModels;
-
 
 namespace CoollectionsApp.Controllers
 {
@@ -23,24 +18,22 @@ namespace CoollectionsApp.Controllers
 
         public IActionResult Index()
         {
-            List<Item> latestItems = new List<Item>(
+            var latestItems = new List<Item>(
                 (from item in _db.Items.ToList()
                 orderby item.AddDate descending, item.Title ascending
                 select item).Take(5)
                 );
 
-            List<Collection> largestCollections = new List<Collection>(
+            var largestCollections = new List<Collection>(
                 (from collection in _db.Collections.ToList()
                  where collection.Size != 0
                  orderby collection.Size descending, collection.Title ascending
                  select collection).Take(5)
                 );
 
-            List<Tag> popularTags = _db.Tags.FromSqlRaw("SELECT Id, TagValue FROM GetTagsWithPopularity()").ToList();
+            List<Tag> popularTags = _db.Tags.FromSqlRaw("SELECT Id, TagValue FROM GetTagsWithPopularity()").Take(18).ToList();
 
             return View(new HomePageViewModel(latestItems, largestCollections, popularTags));
         }
-
-
     }
 }

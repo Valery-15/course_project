@@ -243,7 +243,7 @@ namespace CollectionsApp.Controllers
 
             foreach (var tag in tags)
             {
-                bool isTagExistsInDb = _db.Tags.Where(t => t.TagValue.Equals(tag.TagValue)) == null;
+                bool isTagExistsInDb = _db.Tags.Where(t => t.TagValue.Equals(tag.TagValue)).Count() != 0;
                 Tag tagForItem;
                 if (isTagExistsInDb)
                 {

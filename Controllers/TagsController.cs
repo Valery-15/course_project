@@ -1,15 +1,10 @@
-﻿using System;
-using System.Collections.Generic;
+﻿using System.Collections.Generic;
 using System.Linq;
-using System.Threading.Tasks;
-using System.Text.Json;
 using Microsoft.AspNetCore.Mvc;
 using CollectionsApp.Models;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
-using Microsoft.Extensions.Configuration;
 using CollectionsApp.ViewModels;
-using Microsoft.AspNetCore.Authorization;
 
 namespace CollectionsApp.Controllers
 {
@@ -25,7 +20,6 @@ namespace CollectionsApp.Controllers
             _userManager = userManager;
         }
 
-        
         [HttpGet]
         public JsonResult GetTagsList()
         {

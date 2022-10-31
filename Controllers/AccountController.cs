@@ -1,13 +1,9 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Linq;
+﻿using System.Collections.Generic;
 using System.Threading.Tasks;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.AspNetCore.Identity;
 using CollectionsApp.ViewModels;
-using CollectionsApp.Models;
 using Microsoft.AspNetCore.Mvc.ModelBinding;
-using System.Security.Claims;
 using Microsoft.AspNetCore.Authorization;
 
 namespace CollectionsApp.Controllers
@@ -31,7 +27,11 @@ namespace CollectionsApp.Controllers
         public async Task<IActionResult> Register(RegisterViewModel model)
         {
             if (!ModelState.IsValid) return View(model);
-            IdentityUser user = new IdentityUser { Email = model.Email, UserName = model.UserName, EmailConfirmed = true};
+            IdentityUser user = new IdentityUser { 
+                Email = model.Email, 
+                UserName = model.UserName, 
+                EmailConfirmed = true
+            };
             var result = await _userManager.CreateAsync(user, model.Password);
             if (result.Succeeded)
             {
@@ -55,7 +55,7 @@ namespace CollectionsApp.Controllers
             var user = await _userManager.FindByEmailAsync(model.Email);
             if (user != null)
             {
-                return await SignInActiveUserIfPasswordIsCorrect(user, model);
+                return await SignInActiveUserByPassword(user, model);
             }
             else
             {
@@ -84,7 +84,7 @@ namespace CollectionsApp.Controllers
             }
         }
 
-        private async Task<IActionResult> SignInActiveUserIfPasswordIsCorrect(IdentityUser user, LoginViewModel model)
+        private async Task<IActionResult> SignInActiveUserByPassword(IdentityUser user, LoginViewModel model)
         {
             if (!await _userManager.IsInRoleAsync(user, "active user"))
             {
